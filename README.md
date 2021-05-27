@@ -1,14 +1,21 @@
-# Project
+# Wi-Fi Zero Touch Provisioning (ZTP)
+This project provides a Wi-Fi zero touch provisioning library and daemon for Linux. It supports provisioning of Wi-Fi credentials using [Wi-Fi Easy Connect](https://www.wi-fi.org/discover-wi-fi/wi-fi-easy-connect), also known as the Device Provisioning Protocol (DPP).
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
-
-As the maintainer of this project, please make a few updates:
-
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+## Building
+### Ubuntu (bionic, focal)
+Install package dependencies:
+```
+sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+sudo apt install -y build-essential git cmake libssl-dev libboost-system-dev libsystemd-dev libjson-c-dev libgpiod-dev libboost-random-dev libboost-thread-dev libboost-filesystem-dev libboost-regex-dev zlib1g-dev libbrotli-dev pkg-config
+```
+Checkout and build:
+```
+git clone git@github.com:microsoft/wifi-ztp.git
+cd wifi-ztp
+mkdir build && cd $_
+cmake ..
+make
+```
 
 ## Contributing
 
