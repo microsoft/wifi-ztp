@@ -5,7 +5,6 @@ This project provides a Wi-Fi zero touch provisioning library and daemon for Lin
 ### Ubuntu (bionic, focal)
 Install package dependencies:
 ```
-sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
 sudo apt install -y build-essential git cmake libssl-dev libboost-system-dev libsystemd-dev libjson-c-dev libgpiod-dev libboost-random-dev libboost-thread-dev libboost-filesystem-dev libboost-regex-dev zlib1g-dev libbrotli-dev pkg-config
 ```
 Checkout and build:
