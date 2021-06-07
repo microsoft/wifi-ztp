@@ -1,0 +1,269 @@
+{
+    "$id": "https://developer.microsoft.com/wifi-ztp/ztpd/config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "default": {},
+    "description": "ztpd configuration.",
+    "examples": [
+        {
+            "ui.activation": [
+                "command",
+                "gpio"
+            ],
+            "ui.activation.unit": "hostapd.service",
+            "ui.activation.gpio": {
+                "chip": "gpiochip2",
+                "line": 24,
+                "debounceDelay": 50
+            },
+            "device.roles.exclusive": true,
+            "device.roles.activated": [
+                "enrollee"
+            ],
+            "device.roles": [
+                {
+                    "role": "enrollee",
+                    "interface": "wlan0",
+                    "settingsPath": "/etc/ztpd/config-enrollee.json"
+                },
+                {
+                    "role": "configurator",
+                    "interface": "wlan1",
+                    "settingsPath": "/etc/ztpd/config-configurator.json"
+                }
+            ]
+        }
+    ],
+    "required": [],
+    "title": "ztp configuration.",
+    "type": "object",
+    "properties": {
+        "ui.activation": {
+            "$id": "#/properties/ui.activation",
+            "default": [],
+            "description": "The user interface activation types to enable.",
+            "examples": [
+                [
+                    "command",
+                    "gpio"
+                ]
+            ],
+            "title": "User interface activation methods.",
+            "uniqueItems": true,
+            "type": "array",
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/ui.activation/items",
+                "enum": [
+                    "command",
+                    "gpio"
+                ],
+                "type": "string",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/ui.activation/items/anyOf/0",
+                        "type": "string",
+                        "title": "Enabled user interface activation methods.",
+                        "description": "The type of user interface activation.",
+                        "default": "",
+                        "examples": [
+                            "command",
+                            "gpio"
+                        ]
+                    }
+                ]
+            }
+        },
+        "ui.activation.unit": {
+            "$id": "#/properties/ui.activation.unit",
+            "default": "",
+            "description": "The name of the systemd service unit that represents the user interface for the ztpd daemon. This service unit will be toggled according to the enabled methods set in the ui.activation property.",
+            "examples": [
+                "hostapd.service"
+            ],
+            "title": "User interface systemd activation unit.",
+            "type": "string"
+        },
+        "ui.activation.gpio": {
+            "$id": "#/properties/ui.activation.gpio",
+            "default": {},
+            "description": "Settings for when ui.activation contains \"gpio\". This configures a gpio to toggle the daemon user interface activation state.",
+            "examples": [
+                {
+                    "chip": "gpiochip2",
+                    "line": 24,
+                    "debounceDelay": 50
+                }
+            ],
+            "required": [
+                "chip",
+                "line",
+                "debounceDelay"
+            ],
+            "title": "User interface gpio activation settings.",
+            "type": "object",
+            "properties": {
+                "chip": {
+                    "$id": "#/properties/ui.activation.gpio/properties/chip",
+                    "default": "",
+                    "description": "The owning gpio chip of the line to be configured.",
+                    "examples": [
+                        "gpiochip2"
+                    ],
+                    "title": "GPIO chip.",
+                    "type": "string"
+                },
+                "line": {
+                    "$id": "#/properties/ui.activation.gpio/properties/line",
+                    "default": 0,
+                    "description": "The gpio line (number) used to toggle user interface activation.",
+                    "examples": [
+                        24,
+                        "line24"
+                    ],
+                    "title": "GPIO line.",
+                    "type": [
+                        "integer",
+                        "string"
+                    ]
+                },
+                "debounceDelay": {
+                    "$id": "#/properties/ui.activation.gpio/properties/debounceDelay",
+                    "default": 50,
+                    "description": "The debounce delay in milliseconds (ms) to use on the gpio line when toggling the activation state. Each rising edge of the gpio line will reset the debounce, and each falling edge will ensure at least this duration has elapsed before signaling a change in activation state.",
+                    "examples": [
+                        50
+                    ],
+                    "title": "GPIO line debounce delay (milliseconds)",
+                    "type": "integer"
+                }
+            }
+        },
+        "device.roles.exclusive": {
+            "$id": "#/properties/device.roles.exclusive",
+            "default": false,
+            "description": "Indicates whether only a single device role may be active at any one time. When enabled, this has the effect of disabling any device role upon activation a role. For example, if the \"configurator\" role is currently active and the \"enrollee\" role is newly activated, the \"configurator\" role will be de-activated.",
+            "examples": [
+                true
+            ],
+            "title": "Device role exclusivity.",
+            "type": "boolean"
+        },
+        "device.roles.activated": {
+            "$id": "#/properties/device.roles.activated",
+            "default": [],
+            "description": "The currently activated roles.",
+            "examples": [
+                [
+                    "enrollee"
+                ]
+            ],
+            "title": "Device roles activated.",
+            "type": "array",
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/device.roles.activated/items",
+                "enum": [
+                    "enrollee",
+                    "configurator"
+                ],
+                "uniqueItems": true,
+                "type": "string",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/device.roles.activated/items/anyOf/0",
+                        "type": "string",
+                        "title": "Device role.",
+                        "description": "The device role name.",
+                        "default": "",
+                        "examples": [
+                            "enrollee"
+                        ]
+                    }
+                ]
+            }
+        },
+        "device.roles": {
+            "$id": "#/properties/device.roles",
+            "default": [],
+            "description": "Device Provisioning Protocol (DPP) role settings.",
+            "examples": [
+                [
+                    {
+                        "role": "enrollee",
+                        "interface": "wlan0",
+                        "settingsPath": "/etc/ztpd/config-enrollee.json"
+                    },
+                    {
+                        "role": "configurator",
+                        "interface": "wlan1",
+                        "settingsPath": "/etc/ztpd/config-configurator.json"
+                    }
+                ]
+            ],
+            "title": "Device role settings.",
+            "type": "array",
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/device.roles/items",
+                "type": "object",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/device.roles/items/anyOf/0",
+                        "type": "object",
+                        "title": "Device role settings.",
+                        "description": "The device role settings.",
+                        "default": {},
+                        "examples": [
+                            {
+                                "role": "enrollee",
+                                "interface": "wlan0",
+                                "settingsPath": "/etc/ztpd/config-enrollee.json"
+                            }
+                        ],
+                        "required": [
+                            "role",
+                            "interface",
+                            "settingsPath"
+                        ],
+                        "properties": {
+                            "role": {
+                                "$id": "#/properties/device.roles/items/anyOf/0/properties/role",
+                                "default": "",
+                                "description": "The role name.",
+                                "enum": [
+                                    "enrollee",
+                                    "configurator"
+                                ],
+                                "examples": [
+                                    "enrollee"
+                                ],
+                                "title": "Device role name.",
+                                "type": "string"
+                            },
+                            "interface": {
+                                "$id": "#/properties/device.roles/items/anyOf/0/properties/interface",
+                                "default": "",
+                                "description": "The device interface name associated with the role.",
+                                "examples": [
+                                    "wlan0"
+                                ],
+                                "title": "Device interface name.",
+                                "type": "string"
+                            },
+                            "settingsPath": {
+                                "$id": "#/properties/device.roles/items/anyOf/0/properties/settingsPath",
+                                "default": "",
+                                "description": "The absolute path to the settings for the role.",
+                                "examples": [
+                                    "/etc/ztpd/config-enrollee.json"
+                                ],
+                                "title": "Device settings file path.",
+                                "type": "string"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

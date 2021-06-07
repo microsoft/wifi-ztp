@@ -1,0 +1,262 @@
+From 74c6789d2d8fb532e309b3f80030861db4157bb6 Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Mon, 5 Apr 2021 20:41:17 -0600
+Subject: [PATCH 8/8] DPP: Allow loading bootstrap keys using an OpenSSL
+ engine.
+
+Add ability to load a DPP bootstrap key-pair using an arbitrary OpenSSL
+engine instead of requiring the private key to be specified explicitly.
+The engine name, so path, and key identifier must be specified to
+enable loading a key using an OpenSSL engine. The key identifier is
+an engine-specific field used to identify the key to load.
+
+Explicit private keys, if specified, take precedence over OpenSSL
+engine-based keys.
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ src/common/dpp.c         |  19 ++++++++
+ src/common/dpp.h         |   9 ++++
+ src/common/dpp_crypto.c  | 101 +++++++++++++++++++++++++++++++++++++++
+ src/common/dpp_i.h       |   7 +++
+ wpa_supplicant/wpa_cli.c |   2 +-
+ 5 files changed, 137 insertions(+), 1 deletion(-)
+
+diff --git a/src/common/dpp.c b/src/common/dpp.c
+index 3c8c7682d..4aa3f5c39 100644
+--- a/src/common/dpp.c
++++ b/src/common/dpp.c
+@@ -180,6 +180,13 @@ void dpp_bootstrap_info_free(struct dpp_bootstrap_info *info)
+ 	os_free(info->info);
+ 	os_free(info->chan);
+ 	os_free(info->pk);
++#ifdef CONFIG_OPENSSL_ENGINE
++	os_free(info->key_id);
++	os_free(info->engine_id);
++	os_free(info->engine_path);
++	if (info->engine)
++		ENGINE_finish(info->engine);
++#endif /* CONFIG_OPENSSL_ENGINE */
+ 	EVP_PKEY_free(info->pubkey);
+ 	str_clear_free(info->configurator_params);
+ 	os_free(info);
+@@ -3893,6 +3900,11 @@ int dpp_bootstrap_gen(struct dpp_global *dpp, const char *cmd)
+ 	info = get_param(cmd, " info=");
+ 	curve = get_param(cmd, " curve=");
+ 	key = get_param(cmd, " key=");
++#ifdef CONFIG_OPENSSL_ENGINE
++	bi->key_id = get_param(cmd, " key_id=");
++	bi->engine_id = get_param(cmd, " engine=");
++	bi->engine_path = get_param(cmd, " engine_path=");
++#endif /* CONFIG_OPENSSL_ENGINE */
+ 
+ 	if (key) {
+ 		privkey_len = os_strlen(key) / 2;
+@@ -3901,6 +3913,13 @@ int dpp_bootstrap_gen(struct dpp_global *dpp, const char *cmd)
+ 		    hexstr2bin(key, privkey, privkey_len) < 0)
+ 			goto fail;
+ 	}
++#ifdef CONFIG_OPENSSL_ENGINE
++	else if (bi->key_id) {
++		bi->engine = dpp_load_engine(bi->engine_id, bi->engine_path);
++		if (!bi->engine)
++			goto fail;
++	}
++#endif /* CONFIG_OPENSSL_ENGINE */
+ 
+ 	if (dpp_keygen(bi, curve, privkey, privkey_len) < 0 ||
+ 	    dpp_parse_uri_chan_list(bi, bi->chan) < 0 ||
+diff --git a/src/common/dpp.h b/src/common/dpp.h
+index 65ee905a7..df0806361 100644
+--- a/src/common/dpp.h
++++ b/src/common/dpp.h
+@@ -12,6 +12,9 @@
+ 
+ #ifdef CONFIG_DPP
+ #include <openssl/x509.h>
++#ifdef CONFIG_OPENSSL_ENGINE
++#include <openssl/engine.h>
++#endif /* CONFIG_OPENSSL_ENGINE */ 
+ 
+ #include "utils/list.h"
+ #include "common/wpa_common.h"
+@@ -166,6 +169,12 @@ struct dpp_bootstrap_info {
+ 	int nfc_negotiated; /* whether this has been used in NFC negotiated
+ 			     * connection handover */
+ 	char *configurator_params;
++#ifdef CONFIG_OPENSSL_ENGINE
++	char *key_id;
++	char *engine_id;
++	char *engine_path;
++	ENGINE *engine;
++#endif /* CONFIG_OPENSSL_ENGINE */
+ };
+ 
+ #define PKEX_COUNTER_T_LIMIT 5
+diff --git a/src/common/dpp_crypto.c b/src/common/dpp_crypto.c
+index c75fc7871..34d4732c1 100644
+--- a/src/common/dpp_crypto.c
++++ b/src/common/dpp_crypto.c
+@@ -19,6 +19,9 @@
+ #include "utils/json.h"
+ #include "common/ieee802_11_defs.h"
+ #include "crypto/crypto.h"
++#ifdef CONFIG_OPENSSL_ENGINE
++#include "crypto/openssl_engine.h"
++#endif
+ #include "crypto/random.h"
+ #include "crypto/sha384.h"
+ #include "crypto/sha512.h"
+@@ -363,6 +366,100 @@ int dpp_pbkdf2(size_t hash_len, const u8 *password, size_t password_len,
+ #endif /* CONFIG_DPP2 */
+ 
+ 
++#ifdef CONFIG_OPENSSL_ENGINE
++static EVP_PKEY * dpp_load_keypair(const struct dpp_curve_params **curve,
++				  ENGINE *engine, const char *key_id)
++{
++	EVP_PKEY *pkey;
++	EC_KEY *eckey;
++	const EC_GROUP *group;
++	int nid;
++
++	pkey = ENGINE_load_private_key(engine, key_id, NULL, NULL);
++	if (!pkey) {
++		wpa_printf(MSG_ERROR, "ENGINE: cannot load private key with id '%s' [%s]",
++			key_id, ERR_error_string(ERR_get_error(), NULL));
++		return NULL;
++	}
++
++	eckey = EVP_PKEY_get1_EC_KEY(pkey);
++	if (!eckey) {
++		EVP_PKEY_free(pkey);
++		return NULL;
++	}
++
++	group = EC_KEY_get0_group(eckey);
++	if (!group) {
++		EC_KEY_free(eckey);
++		EVP_PKEY_free(pkey);
++		return NULL;
++	}
++
++	nid = EC_GROUP_get_curve_name(group);
++	*curve = dpp_get_curve_nid(nid);
++	if (!*curve) {
++		wpa_printf(MSG_INFO,
++			   "DPP: Unsupported curve (nid=%d) in pre-assigned key",
++			   nid);
++		EC_KEY_free(eckey);
++		EVP_PKEY_free(pkey);
++		return NULL;
++	}
++
++	EC_KEY_free(eckey);
++	return pkey;
++}
++
++
++static int dpp_openssl_engine_load_dynamic(const char *engine_id,
++			const char *engine_path)
++{
++	const char *pre_cmd[] = {
++		"SO_PATH", engine_path,
++		"ID", engine_id,
++		"LIST_ADD", "1",
++		"LOAD", NULL,
++		NULL, NULL
++	};
++	const char *post_cmd[] = {
++		NULL, NULL
++	};
++
++	if (!engine_id || !engine_path)
++		return 0;
++
++	wpa_printf(MSG_DEBUG, "ENGINE: Loading %s Engine from %s",
++		   engine_id, engine_path);
++
++	return openssl_engine_load_dynamic_generic(pre_cmd, post_cmd, engine_id);
++}
++
++
++ENGINE * dpp_load_engine(const char *engine_id, const char *engine_path)
++{
++	if (dpp_openssl_engine_load_dynamic(engine_id, engine_path) < 0)
++		return NULL;
++
++	ENGINE *engine = ENGINE_by_id(engine_id);
++	if (!engine) {
++		wpa_printf(MSG_ERROR, "ENGINE: engine %s not available [%s]",
++			engine_id, ERR_error_string(ERR_get_error(), NULL));
++		return NULL;
++	}
++
++	if (ENGINE_init(engine) != 1) {
++		wpa_printf(MSG_ERROR, "ENGINE: engine init failed "
++			"(engine: %s) [%s]", engine_id,
++			ERR_error_string(ERR_get_error(), NULL));
++		ENGINE_free(engine);
++		return NULL;
++	}
++
++	return engine;
++}
++#endif /* CONFIG_OPENSSL_ENGINE */
++
++
+ int dpp_bn2bin_pad(const BIGNUM *bn, u8 *pos, size_t len)
+ {
+ 	int num_bytes, offset;
+@@ -730,6 +827,10 @@ int dpp_keygen(struct dpp_bootstrap_info *bi, const char *curve,
+ 
+ 	if (privkey)
+ 		bi->pubkey = dpp_set_keypair(&bi->curve, privkey, privkey_len);
++#ifdef CONFIG_OPENSSL_ENGINE
++	else if (bi->engine)
++		bi->pubkey = dpp_load_keypair(&bi->curve, bi->engine, bi->key_id);
++#endif /* CONFIG_OPENSSL_ENGINE */
+ 	else
+ 		bi->pubkey = dpp_gen_keypair(bi->curve);
+ 	if (!bi->pubkey)
+diff --git a/src/common/dpp_i.h b/src/common/dpp_i.h
+index af12467a5..ff8c16592 100644
+--- a/src/common/dpp_i.h
++++ b/src/common/dpp_i.h
+@@ -12,6 +12,10 @@
+ 
+ #ifdef CONFIG_DPP
+ 
++#ifdef CONFIG_OPENSSL_ENGINE
++#include <openssl/engine.h>
++#endif /* CONFIG_OPENSSL_ENGINE */
++
+ struct dpp_global {
+ 	void *msg_ctx;
+ 	struct dl_list bootstrap; /* struct dpp_bootstrap_info */
+@@ -139,6 +143,9 @@ char * dpp_sign_connector(struct dpp_configurator *conf,
+ 			  const struct wpabuf *dppcon);
+ int dpp_test_gen_invalid_key(struct wpabuf *msg,
+ 			     const struct dpp_curve_params *curve);
++#ifdef CONFIG_OPENSSL_ENGINE
++ENGINE * dpp_load_engine(const char *engine_id, const char *engine_path);
++#endif /* CONFIG_OPENSSL_ENGINE */
+ 
+ struct dpp_reconfig_id {
+ 	const EC_GROUP *group;
+diff --git a/wpa_supplicant/wpa_cli.c b/wpa_supplicant/wpa_cli.c
+index fea7b85e0..11bb63dc3 100644
+--- a/wpa_supplicant/wpa_cli.c
++++ b/wpa_supplicant/wpa_cli.c
+@@ -3855,7 +3855,7 @@ static const struct wpa_cli_cmd wpa_cli_commands[] = {
+ 	  "report a scanned DPP URI from a QR Code" },
+ 	{ "dpp_bootstrap_gen", wpa_cli_cmd_dpp_bootstrap_gen, NULL,
+ 	  cli_cmd_flag_sensitive,
+-	  "type=<qrcode> [chan=..] [mac=..] [info=..] [curve=..] [key=..] = generate DPP bootstrap information" },
++	  "type=<qrcode> [chan=..] [mac=..] [info=..] [curve=..] [key=..] [key_id=..] [engine=..] [engine_path=..] = generate DPP bootstrap information" },
+ 	{ "dpp_bootstrap_remove", wpa_cli_cmd_dpp_bootstrap_remove, NULL,
+ 	  cli_cmd_flag_none,
+ 	  "*|<id> = remove DPP bootstrap information" },
+-- 
+2.20.1
+

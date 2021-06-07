@@ -1,0 +1,93 @@
+{
+    "$id": "https://developer.microsoft.com/wifi-ztp/ztpd/config-enrollee.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "title": "ztpd enrollee configuration.",
+    "description": "ztpd Device Provisioning Protocol (DPP) enrollee role configuration.",
+    "default": {},
+    "examples": [
+        {
+            "bootstrap.info": {
+                "type": "qrcode",
+                "keyId": "0x81000009",
+                "engineId": "tpm2tss",
+                "enginePath": "/usr/lib/x86_64-linux-gnu/engines-1.1/libtpm2tss.so"
+            }
+        }
+    ],
+    "required": [
+        "bootstrap.info"
+    ],
+    "properties": {
+        "bootstrap.info": {
+            "$id": "#/properties/bootstrap.info",
+            "default": {},
+            "description": "Device provisioning protocol bootstrapping information.",
+            "examples": [
+                {
+                    "type": "qrcode",
+                    "keyId": "0x81000009",
+                    "engineId": "tpm2tss",
+                    "enginePath": "/usr/lib/x86_64-linux-gnu/engines-1.1/libtpm2tss.so"
+                }
+            ],
+            "required": [
+                "type",
+                "keyId",
+                "engineId",
+                "enginePath"
+            ],
+            "title": "Device Provisioning Protocol (DPP) bootstrapping information.",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "$id": "#/properties/bootstrap.info/properties/type",
+                    "default": "",
+                    "description": "Device Provisioning Protocol (DPP) bootstrapping method.",
+                    "enum": [
+                        "qrcode",
+                        "pkex",
+                        "nfc",
+                        "bluetooth",
+                        "cloud"
+                    ],
+                    "examples": [
+                        "qrcode"
+                    ],
+                    "title": "Device Provisioning Protocol (DPP) bootstrapping type.",
+                    "type": "string"
+                },
+                "keyId": {
+                    "$id": "#/properties/bootstrap.info/properties/keyId",
+                    "default": "",
+                    "description": "A unique identifier for the device provisioning protocol bootstrapping key as it is represented in the configured OpenSSL engine. OpenSSL egnines may have specific key encoding rules and so the value format is specific to the engine being used.",
+                    "examples": [
+                        "0x81000009"
+                    ],
+                    "title": "OpenSSL bootstrapping key identifier.",
+                    "type": "string"
+                },
+                "engineId": {
+                    "$id": "#/properties/bootstrap.info/properties/engineId",
+                    "default": "",
+                    "description": "The OpenSSL engine (name) to use for device provisioning protocol bootstrapping private key operations.",
+                    "examples": [
+                        "tpm2tss"
+                    ],
+                    "title": "OpenSSL engine identifier.",
+                    "type": "string"
+                },
+                "enginePath": {
+                    "$id": "#/properties/bootstrap.info/properties/enginePath",
+                    "default": "",
+                    "description": "The absolute path to the OpenSSL engine shared object.",
+                    "examples": [
+                        "/usr/lib/x86_64-linux-gnu/engines-1.1/libtpm2tss.so"
+                    ],
+                    "title": "OpenSSL engine shared object path.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

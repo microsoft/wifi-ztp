@@ -1,0 +1,812 @@
+{
+    "$id": "https://developer.microsoft.com/wifi-ztp/ztpd/config-configurator.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "default": {},
+    "description": "ztpd Device Provisioning Protocol (DPP) configurator role configuration.",
+    "examples": [
+        {
+            "bootstrap.info": {
+                "expirationTime": 1440,
+                "providers": [
+                    {
+                        "type": "file",
+                        "name": "azure-dps-records",
+                        "expirationTime": 300,
+                        "path": "/etc/ztpd/config-bootstrapinfo.json",
+                        "decodingInfo": {
+                            "pointer": "/",
+                            "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                            "propertyMap": {
+                                "dppUri": "Uri",
+                                "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                            }
+                        }
+                    },
+                    {
+                        "type": "azuredps",
+                        "name": "Azure DPS (SAS Authentication)",
+                        "expirationTime": 600,
+                        "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                        "authentication": {
+                            "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                            "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                        }
+                    },
+                    {
+                        "type": "azuredps",
+                        "name": "Azure DPS (OAuth2 Authentication)",
+                        "expirationTime": 900,
+                        "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                        "authentication": {
+                            "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                            "clientId": "fd9d9681-8b12-4971-854a-ae16a2fff32d",
+                            "clientSecret": "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2",
+                            "resourceUri": "https://azure-devices-provisioning.net/.default"
+                        }
+                    }
+                ]
+            },
+            "network.configuration": {
+                "default": {
+                    "discovery": {
+                        "ssid": "xmarksthespot",
+                        "ssidCharset": 106
+                    },
+                    "credentials": [
+                        {
+                            "akm": "psk",
+                            "passphrase": "thetruthisoutthere"
+                        },
+                        {
+                            "akm": "psk",
+                            "psk": "746865747275746869736f75747468657265"
+                        },
+                        {
+                            "akm": "sae",
+                            "passphrase": "thetruthisoutthere"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "required": [
+        "bootstrap.info",
+        "network.configuration"
+    ],
+    "title": "ztpd configurator configuration.",
+    "type": "object",
+    "properties": {
+        "bootstrap.info": {
+            "$id": "#/properties/bootstrap.info",
+            "default": {},
+            "description": "Device provisioning protocol bootstrapping information.",
+            "examples": [
+                {
+                    "expirationTime": 1440,
+                    "providers": [
+                        {
+                            "type": "file",
+                            "name": "azure-dps-records",
+                            "expirationTime": 300,
+                            "path": "/etc/ztpd/config-bootstrapinfo.json",
+                            "decodingInfo": {
+                                "pointer": "/",
+                                "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                                "propertyMap": {
+                                    "dppUri": "Uri",
+                                    "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                                }
+                            }
+                        },
+                        {
+                            "type": "azuredps",
+                            "name": "Azure DPS (SAS Authentication)",
+                            "expirationTime": 600,
+                            "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                            "authentication": {
+                                "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                            }
+                        },
+                        {
+                            "type": "azuredps",
+                            "name": "Azure DPS (OAuth2 Authentication)",
+                            "expirationTime": 900,
+                            "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                            "authentication": {
+                                "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                "clientId": "fd9d9681-8b12-4971-854a-ae16a2fff32d",
+                                "clientSecret": "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2",
+                                "resourceUri": "https://azure-devices-provisioning.net/.default"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "required": [
+                "expirationTime",
+                "providers"
+            ],
+            "title": "Device Provisioning Protocol (DPP) bootstrapping information.",
+            "type": "object",
+            "properties": {
+                "expirationTime": {
+                    "$id": "#/properties/bootstrap.info/properties/expirationTime",
+                    "default": 0,
+                    "description": "The global expiration time in minutes of bootstrapping records. If a specific provider does not specify an expiration time, this value is used.",
+                    "examples": [
+                        1440
+                    ],
+                    "title": "Bootstrapping record expiration time (seconds).",
+                    "type": "integer"
+                },
+                "providers": {
+                    "$id": "#/properties/bootstrap.info/properties/providers",
+                    "default": [],
+                    "description": "Array of supported bootstrapping information providers. Each bootstrapping information provider manages records which describe the enrollee devices the configurator is capable of proivisioning.",
+                    "examples": [
+                        [
+                            {
+                                "type": "file",
+                                "name": "azure-dps-records",
+                                "expirationTime": 300,
+                                "path": "/etc/ztpd/config-bootstrapinfo.json",
+                                "decodingInfo": {
+                                    "pointer": "/",
+                                    "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                                    "propertyMap": {
+                                        "dppUri": "Uri",
+                                        "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "azuredps",
+                                "name": "Azure DPS (SAS Authentication)",
+                                "expirationTime": 600,
+                                "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                                "authentication": {
+                                    "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                    "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                                }
+                            }
+                        ]
+                    ],
+                    "title": "Bootstrapping information providers.",
+                    "type": "array",
+                    "additionalItems": false,
+                    "items": {
+                        "$id": "#/properties/bootstrap.info/properties/providers/items",
+                        "anyOf": [
+                            {
+                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0",
+                                "default": {},
+                                "description": "Bootstrapping information provider settings when type is 'file'.",
+                                "examples": [
+                                    {
+                                        "type": "file",
+                                        "name": "azure-dps-records",
+                                        "expirationTime": 300,
+                                        "path": "/etc/ztpd/config-bootstrapinfo.json",
+                                        "decodingInfo": {
+                                            "pointer": "/",
+                                            "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                                            "propertyMap": {
+                                                "dppUri": "Uri",
+                                                "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "required": [
+                                    "type",
+                                    "name",
+                                    "expirationTime",
+                                    "path",
+                                    "decodingInfo"
+                                ],
+                                "title": "File-based bootstrapping information provider configuration.",
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/type",
+                                        "const": "file",
+                                        "default": "",
+                                        "description": "The type of bootstrapping information provider.",
+                                        "examples": [
+                                            "file"
+                                        ],
+                                        "title": "Bootstrapping information provider type.",
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/name",
+                                        "default": "",
+                                        "description": "The name to associate with this instance of the bootstrapping information provider. This name will appear in log messages to identify the provider in question.",
+                                        "examples": [
+                                            "azure-dps-records"
+                                        ],
+                                        "title": "Bootstrapping information provider name.",
+                                        "type": "string"
+                                    },
+                                    "expirationTime": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/expirationTime",
+                                        "default": 0,
+                                        "description": "The expiration time in minutes of bootstrapping records. If no value is specified, the records never expire and consequently will never be updated.",
+                                        "examples": [
+                                            300
+                                        ],
+                                        "title": "Bootstrapping information provider record expiration time (seconds).",
+                                        "type": "integer"
+                                    },
+                                    "path": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/path",
+                                        "default": "",
+                                        "description": "The absolute filesystem path to the json file containing bootstrapping information.",
+                                        "examples": [
+                                            "/etc/ztpd/config-bootstrapinfo.json"
+                                        ],
+                                        "title": "Bootstrapping information file path.",
+                                        "type": "string"
+                                    },
+                                    "decodingInfo": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo",
+                                        "type": "object",
+                                        "title": "Bootstrapping provider information decoding map.",
+                                        "description": "Information describing how to map objects in the file to required Device Provisioning Protocol (DPP) enrollee identification information.",
+                                        "default": {},
+                                        "examples": [
+                                            {
+                                                "pointer": "/",
+                                                "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                                                "propertyMap": {
+                                                    "dppUri": "Uri",
+                                                    "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                                                }
+                                            }
+                                        ],
+                                        "required": [
+                                            "pointer",
+                                            "pointerBase",
+                                            "propertyMap"
+                                        ],
+                                        "properties": {
+                                            "pointer": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo/properties/pointer",
+                                                "default": "",
+                                                "description": "A JSON pointer referencing the array that contains Device Provisioning Protocol (DPP) enrollee identification.",
+                                                "examples": [
+                                                    "/"
+                                                ],
+                                                "title": "Enrollee bootstrapping information array JSON pointer.",
+                                                "type": "string"
+                                            },
+                                            "pointerBase": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo/properties/pointerBase",
+                                                "default": "",
+                                                "description": "A JSON pointer, relative to the JSON pointer specified in the \"pointer\" property, referencing the sub-object containing the Device Provisioning Protocol (DPP) enrollee identification information.",
+                                                "examples": [
+                                                    "/optionalDeviceInformation/WifiDpp"
+                                                ],
+                                                "title": "Enrollee bootstrapping information object JSON pointer.",
+                                                "type": "string"
+                                            },
+                                            "propertyMap": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo/properties/propertyMap",
+                                                "default": {},
+                                                "description": "A table of properties mapping JSON property names to required Device Provisioning Protocol (DPP) values.",
+                                                "examples": [
+                                                    {
+                                                        "dppUri": "Uri",
+                                                        "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                                                    }
+                                                ],
+                                                "required": [
+                                                    "dppUri",
+                                                    "publicKeyHash"
+                                                ],
+                                                "title": "Device Provisioning Protocol (DPP) Enrollee property map.",
+                                                "type": "object",
+                                                "properties": {
+                                                    "dppUri": {
+                                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo/properties/propertyMap/properties/dppUri",
+                                                        "default": "",
+                                                        "description": "The name of the JSON property which holds the Device Provisioning Protocol bootstrapping URI.",
+                                                        "examples": [
+                                                            "Uri"
+                                                        ],
+                                                        "title": "Device Provisioning Protocol (DPP) Bootstrapping URI property name.",
+                                                        "type": "string"
+                                                    },
+                                                    "publicKeyHash": {
+                                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/0/properties/decodingInfo/properties/propertyMap/properties/publicKeyHash",
+                                                        "default": "",
+                                                        "description": "The name of the JSON property which holds the Device Provisioning Protocol (DPP) public bootstrapping key \"chirp\" hash.",
+                                                        "examples": [
+                                                            "BootstrapKeyEccPubHashChirp"
+                                                        ],
+                                                        "title": "Device Provisioning Protocol (DPP) Bootstrapping public key chirp hash name.",
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1",
+                                "default": {},
+                                "description": "Bootstrapping information provider settings when type is 'azuredps' and uses Shared Access Signature (SAS) token authentication.",
+                                "examples": [
+                                    {
+                                        "type": "azuredps",
+                                        "name": "Azure DPS (SAS Authentication)",
+                                        "expirationTime": 600,
+                                        "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                                        "authentication": {
+                                            "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                            "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                                        }
+                                    }
+                                ],
+                                "required": [
+                                    "type",
+                                    "name",
+                                    "serviceEndpointUri",
+                                    "authentication"
+                                ],
+                                "title": "Azure Device Provisioning Service (DPS) based bootstrapping information provider configuration.",
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/type",
+                                        "default": "",
+                                        "description": "The type of bootstrapping information provider.",
+                                        "examples": [
+                                            "azuredps"
+                                        ],
+                                        "title": "Bootstrapping information provider type.",
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/name",
+                                        "default": "",
+                                        "description": "The name to associate with this instance of the bootstrapping information provider. This name will appear in log messages to identify the provider in question.",
+                                        "examples": [
+                                            "Azure DPS (SAS Authentication)"
+                                        ],
+                                        "title": "Bootstrapping information provider name.",
+                                        "type": "string"
+                                    },
+                                    "expirationTime": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/expirationTime",
+                                        "default": 0,
+                                        "description": "The expiration time in minutes of bootstrapping records. If no value is specified, the records never expire and consequently will never be updated.",
+                                        "examples": [
+                                            600
+                                        ],
+                                        "title": "Bootstrapping record expiration time (seconds).",
+                                        "type": "integer"
+                                    },
+                                    "serviceEndpointUri": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/serviceEndpointUri",
+                                        "default": "",
+                                        "description": "The service endpoint URI of the Device Provisioning Service (DPS) instance.",
+                                        "examples": [
+                                            "wifizerotouch.azure-devices-provisioning.net"
+                                        ],
+                                        "title": "Azure Device Provisioning Service (DPS) endpoint URI.",
+                                        "type": "string"
+                                    },
+                                    "authentication": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/authentication",
+                                        "type": "object",
+                                        "title": "Shared Access Key (SAS) authentication configuration.",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": {},
+                                        "examples": [
+                                            {
+                                                "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                                "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                                            }
+                                        ],
+                                        "required": [
+                                            "authorityUrl",
+                                            "connectionString"
+                                        ],
+                                        "properties": {
+                                            "authorityUrl": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/authentication/properties/authorityUrl",
+                                                "default": "",
+                                                "description": "The OAuth2 authority url endpoint which grants authorization tokens.",
+                                                "examples": [
+                                                    "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token"
+                                                ],
+                                                "title": "SAS Authority URL.",
+                                                "type": "string"
+                                            },
+                                            "connectionString": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/1/properties/authentication/properties/connectionString",
+                                                "default": "",
+                                                "description": "The connection string for the Device Provisioning Service (DPS) instance. See https://docs.microsoft.com/en-us/azure/iot-dps/quick-setup-auto-provision-cli#get-the-connection-string-for-the-iot-hub.",
+                                                "examples": [
+                                                    "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                                                ],
+                                                "title": "SAS connection string.",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2",
+                                "default": {},
+                                "description": "Bootstrapping information provider settings when type is 'azuredps' and uses Client Credential grant type OAuth2 authentication.",
+                                "examples": [
+                                    {
+                                        "type": "azuredps",
+                                        "name": "Azure DPS (OAuth2 Authentication)",
+                                        "expirationTime": 900,
+                                        "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                                        "authentication": {
+                                            "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                            "clientId": "fd9d9681-8b12-4971-854a-ae16a2fff32d",
+                                            "clientSecret": "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2",
+                                            "resourceUri": "https://azure-devices-provisioning.net/.default"
+                                        }
+                                    }
+                                ],
+                                "required": [
+                                    "type",
+                                    "name",
+                                    "serviceEndpointUri",
+                                    "authentication"
+                                ],
+                                "title": "Azure Device Provisioning Service (DPS) based bootstrapping information provider using OAuth2.",
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/type",
+                                        "default": "",
+                                        "description": "The type of bootstrapping information provider.",
+                                        "examples": [
+                                            "azuredps"
+                                        ],
+                                        "title": "Bootstrapping information provider type.",
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/name",
+                                        "default": "",
+                                        "description": "The name to associate with this instance of the bootstrapping information provider. This name will appear in log messages to identify the provider in question.",
+                                        "examples": [
+                                            "Azure DPS (SAS Authentication)"
+                                        ],
+                                        "title": "Bootstrapping information provider name.",
+                                        "type": "string"
+                                    },
+                                    "expirationTime": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/expirationTime",
+                                        "default": 0,
+                                        "description": "The expiration time in minutes of bootstrapping records. If no value is specified, the records never expire and consequently will never be updated.",
+                                        "examples": [
+                                            600
+                                        ],
+                                        "title": "Bootstrapping record expiration time (seconds).",
+                                        "type": "integer"
+                                    },
+                                    "serviceEndpointUri": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/serviceEndpointUri",
+                                        "default": "",
+                                        "description": "The service endpoint URI of the Device Provisioning Service (DPS) instance.",
+                                        "examples": [
+                                            "wifizerotouch.azure-devices-provisioning.net"
+                                        ],
+                                        "title": "Azure Device Provisioning Service (DPS) endpoint URI.",
+                                        "type": "string"
+                                    },
+                                    "authentication": {
+                                        "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/authentication",
+                                        "type": "object",
+                                        "title": "OAuth2 client credential grant type authentication configuration.",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": {},
+                                        "examples": [
+                                            {
+                                                "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                                                "clientId": "fd9d9681-8b12-4971-854a-ae16a2fff32d",
+                                                "clientSecret": "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2",
+                                                "resourceUri": "https://azure-devices-provisioning.net/.default"
+                                            }
+                                        ],
+                                        "required": [
+                                            "authorityUrl",
+                                            "clientId",
+                                            "clientSecret",
+                                            "resourceUri"
+                                        ],
+                                        "properties": {
+                                            "authorityUrl": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/authentication/properties/authorityUrl",
+                                                "default": "",
+                                                "description": "The authority url endpoint which grants OAuth2 authorization tokens.",
+                                                "examples": [
+                                                    "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token"
+                                                ],
+                                                "title": "OAuth2 authority URL.",
+                                                "type": "string"
+                                            },
+                                            "clientId": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/authentication/properties/clientId",
+                                                "default": "",
+                                                "description": "The 'client_id' for client credential grant type OAuth2 authentication.",
+                                                "examples": [
+                                                    "fd9d9681-8b12-4971-854a-ae16a2fff32d"
+                                                ],
+                                                "title": "OAuth2 client identifier.",
+                                                "type": "string"
+                                            },
+                                            "clientSecret": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/authentication/properties/clientSecret",
+                                                "default": "",
+                                                "description": "The 'client_secret' for client credential grant type OAuth2 authentication.",
+                                                "examples": [
+                                                    "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2"
+                                                ],
+                                                "title": "OAuth2 client secret.",
+                                                "type": "string"
+                                            },
+                                            "resourceUri": {
+                                                "$id": "#/properties/bootstrap.info/properties/providers/items/anyOf/2/properties/authentication/properties/resourceUri",
+                                                "default": "The resource URI of the endpoint that can be accessed with the requested token.",
+                                                "description": "",
+                                                "examples": [
+                                                    "https://azure-devices-provisioning.net/.default"
+                                                ],
+                                                "title": "OAuth2 resource URI.",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "network.configuration": {
+            "$id": "#/properties/network.configuration",
+            "default": {},
+            "description": "Network provisioning information mapping network configuration information to enrollee identities.",
+            "examples": [
+                {
+                    "default": {
+                        "discovery": {
+                            "ssid": "xmarksthespot",
+                            "ssidCharset": 106
+                        },
+                        "credentials": [
+                            {
+                                "akm": "psk",
+                                "passphrase": "thetruthisoutthere"
+                            },
+                            {
+                                "akm": "psk",
+                                "psk": "746865747275746869736f75747468657265"
+                            },
+                            {
+                                "akm": "sae",
+                                "passphrase": "thetruthisoutthere"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "required": [
+                "default"
+            ],
+            "title": "Network configuration for provisioning.",
+            "type": "object",
+            "properties": {
+                "default": {
+                    "$id": "#/properties/network.configuration/properties/default",
+                    "default": {},
+                    "description": "The default network to provision when a specific network for an enrollee has not been configured.",
+                    "examples": [
+                        {
+                            "discovery": {
+                                "ssid": "xmarksthespot",
+                                "ssidCharset": 106
+                            },
+                            "credentials": [
+                                {
+                                    "akm": "psk",
+                                    "passphrase": "thetruthisoutthere"
+                                },
+                                {
+                                    "akm": "psk",
+                                    "psk": "746865747275746869736f75747468657265"
+                                },
+                                {
+                                    "akm": "sae",
+                                    "passphrase": "thetruthisoutthere"
+                                }
+                            ]
+                        }
+                    ],
+                    "required": [
+                        "discovery",
+                        "credentials"
+                    ],
+                    "title": "Default network configuration.",
+                    "type": "object",
+                    "properties": {
+                        "discovery": {
+                            "$id": "#/properties/network.configuration/properties/default/properties/discovery",
+                            "default": {},
+                            "description": "Target network discovery properties.",
+                            "examples": [
+                                {
+                                    "ssid": "xmarksthespot",
+                                    "ssidCharset": 106
+                                }
+                            ],
+                            "required": [
+                                "ssid",
+                                "ssidCharset"
+                            ],
+                            "title": "Network discovery information.",
+                            "type": "object",
+                            "properties": {
+                                "ssid": {
+                                    "$id": "#/properties/network.configuration/properties/default/properties/discovery/properties/ssid",
+                                    "default": "",
+                                    "description": "The service set identifier (SSID) of the target network to provision.",
+                                    "examples": [
+                                        "xmarksthespot"
+                                    ],
+                                    "title": "Service Set Identifier (SSID).",
+                                    "type": "string"
+                                },
+                                "ssidCharset": {
+                                    "$id": "#/properties/network.configuration/properties/default/properties/discovery/properties/ssidCharset",
+                                    "default": 0,
+                                    "description": "The value of the character set that would be used to convert the SSID octet string into characters. This must be an MIBenum value from https://www.iana.org/assignments/character-sets/character-sets.xhtml.",
+                                    "examples": [
+                                        106
+                                    ],
+                                    "title": "Service Set Identifier (SSID) character set.",
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "credentials": {
+                            "$id": "#/properties/network.configuration/properties/default/properties/credentials",
+                            "default": [],
+                            "description": "An explanation about the purpose of this instance.",
+                            "examples": [
+                                [
+                                    {
+                                        "akm": "psk",
+                                        "passphrase": "thetruthisoutthere"
+                                    },
+                                    {
+                                        "akm": "psk",
+                                        "psk": "746865747275746869736f75747468657265"
+                                    },
+                                    {
+                                        "akm": "sae",
+                                        "passphrase": "thetruthisoutthere"
+                                    }
+                                ]
+                            ],
+                            "minItems": 1,
+                            "title": "Network credentials.",
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "$id": "#/properties/network.configuration/properties/default/properties/credentials/items",
+                                "minItems": 1,
+                                "uniqueItems": true,
+                                "type": "object",
+                                "anyOf": [
+                                    {
+                                        "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/0",
+                                        "default": {},
+                                        "description": "The network configuration when a passphrase is specified.",
+                                        "examples": [
+                                            {
+                                                "akm": "psk",
+                                                "passphrase": "thetruthisoutthere"
+                                            }
+                                        ],
+                                        "required": [
+                                            "akm",
+                                            "passphrase"
+                                        ],
+                                        "title": "Network configuration for a passphrase.",
+                                        "type": "object",
+                                        "properties": {
+                                            "akm": {
+                                                "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/0/properties/akm",
+                                                "default": "",
+                                                "description": "The authentication and key management scheme for the network.",
+                                                "enum": [
+                                                    "psk",
+                                                    "sae"
+                                                ],
+                                                "examples": [
+                                                    "psk"
+                                                ],
+                                                "title": "Network authentication and key management scheme.",
+                                                "type": "string"
+                                            },
+                                            "passphrase": {
+                                                "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/0/properties/passphrase",
+                                                "default": "",
+                                                "description": "The passphrase for the network, encoded as ASCII.",
+                                                "examples": [
+                                                    "thetruthisoutthere"
+                                                ],
+                                                "title": "Network passphrase.",
+                                                "maxLength": 63,
+                                                "minLength": 8,
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/1",
+                                        "default": {},
+                                        "description": "The network configuration when a pre-shared key (psk) is specified.",
+                                        "examples": [
+                                            {
+                                                "akm": "psk",
+                                                "psk": "746865747275746869736f75747468657265"
+                                            }
+                                        ],
+                                        "required": [
+                                            "akm",
+                                            "psk"
+                                        ],
+                                        "title": "Network configuration for a pre-shared key.",
+                                        "type": "object",
+                                        "properties": {
+                                            "akm": {
+                                                "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/1/properties/akm",
+                                                "default": "",
+                                                "description": "The authentication and key management scheme for the network.",
+                                                "examples": [
+                                                    "psk"
+                                                ],
+                                                "title": "Network authentication and key management scheme.",
+                                                "const": "psk",
+                                                "type": "string"
+                                            },
+                                            "psk": {
+                                                "$id": "#/properties/network.configuration/properties/default/properties/credentials/items/anyOf/1/properties/psk",
+                                                "default": "",
+                                                "description": "The pre-shared key (psk) for the network, encoded as hexadecimal.",
+                                                "examples": [
+                                                    "746865747275746869736f75747468657265"
+                                                ],
+                                                "title": "Network pre-shared key.",
+                                                "maxLength": 126,
+                                                "minLength": 16,
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

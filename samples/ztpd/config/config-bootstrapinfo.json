@@ -1,0 +1,122 @@
+[
+    {
+        "deviceId": "0ae290e2-3702-4ef0-a7ca-284947d896e5",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub0",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-02-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "edb4037de869af5ad7d02665205ad5e26c3810a4d39d61e70ed34135ca7a496e",
+                "Uri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACE0vdn8KsfXKHusJPcEscx+naQyQJLSob1VjuqPsP6r8=;;"
+            }
+        }
+    },
+    {
+        "deviceId": "6188b64d-0f87-486e-85c8-06e3d9af8817",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub1",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-02-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "dfb32c76fde287a1911d6f1fb13310ea8b8019aa95fbe4211499f8e664d932c6",
+                "Uri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACiLN+2Rk4tRlwl4CKYkSEdheJIEbZO5UBr9SPoPFI394=;;"
+            }
+        }
+    },
+    {
+        "deviceId": "28dd5122-cd2d-41f2-b89f-e71b798a2704",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub2",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-04-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "dfb32c76fde287a1911d6f1fb13310ea8b8019aa95fbe4211499f8e664d932c6",
+                "Uri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACCcWFqRtN+f0loEUgGIXDnMXPrjl92u2pV97Ff6DjUD8=;;"
+            }
+        }
+    },
+    {
+        "deviceId": "bd9a16e3-018c-4b09-81c6-b6c08ba86634",
+        "status": "disabled",
+        "isEdge": true,
+        "deviceGroupName": "pub3",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-06-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "d12f07cfeea3b0b16d97fb391c54eca597078016c2d777db8f98014b82f4c4dc",
+                "Uri": "DPP:V:2;K:MEYwEAYHKoZIzj0CAQYFK4EEACIDMgACZDO9w/1O5wfVAmxt9amwOi4utQSMd2l/rn4ru/9+03C/Ree8nXgQhYeontV9lKS3;;"
+            }
+        }
+    },
+    {
+        "deviceId": "646aacb0-fd8b-403a-b2cd-634f13382707",
+        "status": "enabled",
+        "isEdge": false,
+        "deviceGroupName": "pub4",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-08-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "14aab6f7f95b5684645436d1c4d3ce03ed765edbfa5168fe0cef6cdcd2b6312f",
+                "Uri": "DPP:V:2;K:MEYwEAYHKoZIzj0CAQYFK4EEACIDMgADsNfU7L1hyWzyRqIUXNeX3B0P07NTmz6OKs5BHU7XNrlfKcc9UVy8HI6RhNEmNh+b;;"
+            }
+        }
+    },
+    {
+        "deviceId": "9b3371f7-4551-4103-83b2-4560ed31b9a1",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub5",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-10-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "626811eeb637fd63b29e279e411b9942947237fb0dcc1d103869fe61c87abc03",
+                "Uri": "DPP:V:2;K:MFgwEAYHKoZIzj0CAQYFK4EEACMDRAACARSJbFYU/AHogatLzs1qRlfKR8tlVSf+YO1OEqU05EL9p5Q43nvDo0UPE/xTGGNYyi4hf/pMViQuNANloMs0gTKB;;"
+            }
+        }
+    },
+    {
+        "deviceId": "9b04f08d-59d6-40de-a532-d059051a9f12",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub6",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-10-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "478101b3706af3c7a0fa0a3913256ac4147fe0a36643ff6a05ac8c6d26830792",
+                "Uri": "DPP:V:1;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgADehJwKe6jTkGl4zenL39BNuEMf4VXwKXa6a3XOikZN0Y=;;"
+            }
+        }
+    },
+    {
+        "deviceId": "d5dd2363-09d9-4a2b-b53f-910aea9e7ffc",
+        "status": "enabled",
+        "isEdge": true,
+        "deviceGroupName": "pub7",
+        "desiredHubDeviceId": "123",
+        "authTemplateName": "defaultTemplate",
+        "createdDateTimeUtc": "2020-10-01T12:34:56.789Z",
+        "optionalDeviceInformation": {
+            "WifiDpp": {
+                "BootstrapKeyEccPubHashChirp": "7ab40c2ee86a8297b3f2252dc82cffd38a5987852498bf54099aae1f460a0f86",
+                "Uri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACcafpagzR/jXJWFZzHemcRP859ukO0GG3qCSTKScftjg=;;"
+            }
+        }
+    }
+]

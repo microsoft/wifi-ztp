@@ -1,0 +1,13 @@
+[Unit]
+Description=Wi-Fi Zero Touch Provisioning Daemon
+Before=network.target
+Wants=network.target
+
+[Service]
+Type=dbus
+BusName=com.microsoft.ztp1
+Restart=on-failure
+ExecStart=${CMAKE_INSTALL_FULL_SBINDIR}/ztpd -c ${CMAKE_INSTALL_FULL_SYSCONFDIR}/ztpd/config.json
+
+[Install]
+Alias=dbus-com.microsoft.ztp1.service

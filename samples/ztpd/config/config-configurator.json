@@ -1,0 +1,65 @@
+{
+    "bootstrap.info": {
+        "expirationTime": 1440,
+        "providers": [
+            {
+                "type": "file",
+                "name": "azure-dps-records",
+                "expirationTime": 300,
+                "path": "/etc/ztpd/config-bootstrapinfo.json",
+                "decodingInfo": {
+                    "pointer": "/",
+                    "pointerBase": "/optionalDeviceInformation/WifiDpp",
+                    "propertyMap": {
+                        "dppUri": "Uri",
+                        "publicKeyHash": "BootstrapKeyEccPubHashChirp"
+                    }
+                }
+            },
+            {
+                "type": "azuredps",
+                "name": "Azure DPS (SAS Authentication)",
+                "expirationTime": 600,
+                "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                "authentication": {
+                    "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                    "connectionString": "HostName=wifizerotouch.azure-devices-provisioning.net;SharedAccessKeyName=serviceread;SharedAccessKey=ab+CD0/eFghIJkLm1NoP2qRsTU3PlaCeHOLdErGHIJk="
+                }
+            },
+            {
+                "type": "azuredps",
+                "name": "Azure DPS (OAuth2 Authentication)",
+                "expirationTime": 900,
+                "serviceEndpointUri": "wifizerotouch.azure-devices-provisioning.net",
+                "authentication": {
+                    "authorityUrl": "https://login.microsoftonline.com/ceb07937-2105-4e4a-aade-3b8b5c8b1208/oauth2/v2.0/token",
+                    "clientId": "fd9d9681-8b12-4971-854a-ae16a2fff32d",
+                    "clientSecret": "3cgcxvQ9--PlaCeholdErnkeR_G3.7eD-2",
+                    "resourceUri": "https://azure-devices-provisioning.net/.default"
+                }
+            }
+        ]
+    },
+    "network.configuration": {
+        "default": {
+            "discovery": {
+                "ssid": "xmarksthespot",
+                "ssidCharset": 106
+            },
+            "credentials": [
+                {
+                    "akm": "psk",
+                    "passphrase": "thetruthisoutthere"
+                },
+                {
+                    "akm": "psk",
+                    "psk": "746865747275746869736f75747468657265"
+                },
+                {
+                    "akm": "sae",
+                    "passphrase": "thetruthisoutthere"   
+                }
+            ]
+        }
+    }
+}

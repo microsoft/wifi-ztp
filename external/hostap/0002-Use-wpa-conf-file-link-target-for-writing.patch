@@ -1,0 +1,70 @@
+From 8ef18819c383df0191b96e84d5f8c6f21e73c785 Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Tue, 6 Apr 2021 16:04:35 -0600
+Subject: [PATCH 2/8] Use wpa conf file link target for writing.
+
+When the wpa conf file is a symbolic link, the link is clobbered when
+written. This occurs because the rename() of the (regular) tmp file
+used to write changes replaces the original file, thus discarding the
+link.
+
+Fix this by first resolving the conf file link target (if any), and
+using the target as the defacto file path instead of the link file
+itself. This ensures the tmp file is created on the same filesystem
+as the link target, which is required for rename().
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ wpa_supplicant/config_file.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
+index a535e3f08..fca21b9c1 100644
+--- a/wpa_supplicant/config_file.c
++++ b/wpa_supplicant/config_file.c
+@@ -1545,15 +1545,23 @@ int wpa_config_write(const char *name, struct wpa_config *config)
+ 	struct wpa_config_blob *blob;
+ #endif /* CONFIG_NO_CONFIG_BLOBS */
+ 	int ret = 0;
+-	const char *orig_name = name;
++	const char *orig_name;
+ 	int tmp_len;
+ 	char *tmp_name;
++	char *link_target;
+ 
+ 	if (!name) {
+ 		wpa_printf(MSG_ERROR, "No configuration file for writing");
+ 		return -1;
+-	}
++	} else if (read_link_target(name, &link_target) < 0) {
++		wpa_printf(MSG_ERROR, "Failed to read '%s' link target for writing", name);
++		return -1;
++	} 
+ 
++	if (link_target)
++		name = link_target;
++
++	orig_name = name;
+ 	tmp_len = os_strlen(name) + 5; /* allow space for .tmp suffix */
+ 	tmp_name = os_malloc(tmp_len);
+ 	if (tmp_name) {
+@@ -1567,6 +1575,7 @@ int wpa_config_write(const char *name, struct wpa_config *config)
+ 	if (f == NULL) {
+ 		wpa_printf(MSG_DEBUG, "Failed to open '%s' for writing", name);
+ 		os_free(tmp_name);
++		os_free(link_target);
+ 		return -1;
+ 	}
+ 
+@@ -1619,6 +1628,8 @@ int wpa_config_write(const char *name, struct wpa_config *config)
+ 		os_free(tmp_name);
+ 	}
+ 
++	os_free(link_target);
++
+ 	wpa_printf(MSG_DEBUG, "Configuration file '%s' written %ssuccessfully",
+ 		   orig_name, ret ? "un" : "");
+ 	return ret;
+-- 
+2.20.1
+

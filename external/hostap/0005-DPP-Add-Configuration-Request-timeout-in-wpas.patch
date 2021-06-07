@@ -1,0 +1,77 @@
+From 187537d9f116d998f5e454be5e7c78f03ac5c4fb Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Mon, 19 Apr 2021 19:29:54 +0000
+Subject: [PATCH 5/8] DPP: Add Configuration Request timeout in wpas
+
+Add 10s timeout for receipt of Configuration Request frame from
+enrollee.
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ wpa_supplicant/dpp_supplicant.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/wpa_supplicant/dpp_supplicant.c b/wpa_supplicant/dpp_supplicant.c
+index 2bcf10b4e..2a7918caf 100644
+--- a/wpa_supplicant/dpp_supplicant.c
++++ b/wpa_supplicant/dpp_supplicant.c
+@@ -47,6 +47,8 @@ wpas_dpp_tx_pkex_status(struct wpa_supplicant *wpa_s,
+ 			const u8 *src, const u8 *bssid,
+ 			const u8 *data, size_t data_len,
+ 			enum offchannel_send_action_result result);
++static void wpas_dpp_conf_req_rx_wait_timeout(void *eloop_ctx, 
++			void *timeout_ctx);
+ #ifdef CONFIG_DPP2
+ static void wpas_dpp_reconfig_reply_wait_timeout(void *eloop_ctx,
+ 						 void *timeout_ctx);
+@@ -654,6 +656,24 @@ static void wpas_dpp_init_timeout(void *eloop_ctx, void *timeout_ctx)
+ }
+ 
+ 
++static void wpas_dpp_conf_req_rx_wait_timeout(void *eloop_ctx, 
++			void *timeout_ctx)
++{
++	struct wpa_supplicant *wpa_s = eloop_ctx;
++
++	if (!wpa_s->dpp_auth || !wpa_s->dpp_auth->auth_success)
++		return;
++
++	wpa_printf(MSG_DEBUG, 
++		"DPP: terminate exchange due to Configuration Request rx timeout");
++	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_CONF_FAILED 
++		"No Configuration Request received");
++
++	dpp_auth_deinit(wpa_s->dpp_auth);
++	wpa_s->dpp_auth = NULL;
++}
++
++
+ static int wpas_dpp_auth_init_next(struct wpa_supplicant *wpa_s)
+ {
+ 	struct dpp_authentication *auth = wpa_s->dpp_auth;
+@@ -1776,8 +1796,12 @@ static void wpas_dpp_auth_success(struct wpa_supplicant *wpa_s, int initiator)
+ 	}
+ #endif /* CONFIG_TESTING_OPTIONS */
+ 
+-	if (wpa_s->dpp_auth->configurator)
++	if (wpa_s->dpp_auth->configurator) {
+ 		wpas_dpp_start_gas_server(wpa_s);
++		eloop_register_timeout(10, 0,
++				       wpas_dpp_conf_req_rx_wait_timeout,
++				       wpa_s, NULL);
++	}
+ 	else
+ 		wpas_dpp_start_gas_client(wpa_s);
+ }
+@@ -2968,6 +2992,8 @@ wpas_dpp_gas_req_handler(void *ctx, void *resp_ctx, const u8 *sa,
+ 		    query, query_len);
+ 	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_CONF_REQ_RX "src=" MACSTR,
+ 		MAC2STR(sa));
++	if (auth->configurator)
++		eloop_cancel_timeout(wpas_dpp_conf_req_rx_wait_timeout, wpa_s, NULL);
+ 	resp = dpp_conf_req_rx(auth, query, query_len);
+ 
+ #ifdef CONFIG_DPP2
+-- 
+2.20.1
+
