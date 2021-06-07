@@ -1,0 +1,88 @@
+From 5f6ac7228129a30d601c8aded449863d4ce0d5b8 Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Mon, 5 Apr 2021 10:43:34 -0600
+Subject: [PATCH 7/8] Drop tls prefix from tls_engine_load_dynamic_generic.
+
+Rename tls_engine_load_dynamic_generic to
+openssl_engine_load_dynamic_generic, reflecting that it is not tls
+specific. Update comment referencing tls to be generic.
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ src/crypto/openssl_engine.c | 11 +++++------
+ src/crypto/openssl_engine.h |  2 +-
+ src/crypto/tls_openssl.c    |  4 ++--
+ 3 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/src/crypto/openssl_engine.c b/src/crypto/openssl_engine.c
+index 5fbc480d1..9a0a19c77 100644
+--- a/src/crypto/openssl_engine.c
++++ b/src/crypto/openssl_engine.c
+@@ -14,7 +14,7 @@
+ #include "openssl_engine.h"
+ 
+ /**
+- * tls_engine_load_dynamic_generic - load any openssl engine
++ * openssl_engine_load_dynamic_generic - load any openssl engine
+  * @pre: an array of commands and values that load an engine initialized
+  *       in the engine specific function
+  * @post: an array of commands and values that initialize an already loaded
+@@ -25,7 +25,7 @@
+  *
+  * Returns: 0 on success, -1 on failure
+  */
+-int tls_engine_load_dynamic_generic(const char *pre[],
++int openssl_engine_load_dynamic_generic(const char *pre[],
+ 					   const char *post[], const char *id)
+ {
+ 	ENGINE *engine;
+@@ -37,10 +37,9 @@ int tls_engine_load_dynamic_generic(const char *pre[],
+ 			   "available", id);
+ 		/*
+ 		 * If it was auto-loaded by ENGINE_by_id() we might still
+-		 * need to tell it which PKCS#11 module to use in legacy
+-		 * (non-p11-kit) environments. Do so now; even if it was
+-		 * properly initialised before, setting it again will be
+-		 * harmless.
++		 * need to execute post-init commands. Do so now; even if
++		 * it was properly initialised before, setting it again
++		 * will be harmless.
+ 		 */
+ 		goto found;
+ 	}
+diff --git a/src/crypto/openssl_engine.h b/src/crypto/openssl_engine.h
+index 50e625bac..77b8d80d6 100644
+--- a/src/crypto/openssl_engine.h
++++ b/src/crypto/openssl_engine.h
+@@ -6,5 +6,5 @@
+  * See README for more details.
+  */
+ 
+-int tls_engine_load_dynamic_generic(const char *pre[],
++int openssl_engine_load_dynamic_generic(const char *pre[],
+ 					   const char *post[], const char *id);
+diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
+index 9463574a5..095b92b63 100644
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -814,7 +814,7 @@ static int tls_engine_load_dynamic_pkcs11(const char *pkcs11_so_path,
+ 	wpa_printf(MSG_DEBUG, "ENGINE: Loading pkcs11 Engine from %s",
+ 		   pkcs11_so_path);
+ 
+-	return tls_engine_load_dynamic_generic(pre_cmd, post_cmd, engine_id);
++	return openssl_engine_load_dynamic_generic(pre_cmd, post_cmd, engine_id);
+ }
+ 
+ 
+@@ -842,7 +842,7 @@ static int tls_engine_load_dynamic_opensc(const char *opensc_so_path)
+ 	wpa_printf(MSG_DEBUG, "ENGINE: Loading OpenSC Engine from %s",
+ 		   opensc_so_path);
+ 
+-	return tls_engine_load_dynamic_generic(pre_cmd, NULL, engine_id);
++	return openssl_engine_load_dynamic_generic(pre_cmd, NULL, engine_id);
+ }
+ #endif /* OPENSSL_NO_ENGINE */
+ 
+-- 
+2.20.1
+

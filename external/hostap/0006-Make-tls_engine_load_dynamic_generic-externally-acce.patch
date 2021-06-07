@@ -1,0 +1,350 @@
+From 576ecf1eeddb08f2152720a2fcfe53dfe8fc32f0 Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Mon, 5 Apr 2021 10:35:56 -0600
+Subject: [PATCH 6/8] Make tls_engine_load_dynamic_generic externally
+ accessible.
+
+Expose tls_engine_load_dynamic_generic such that it can be used
+by other code wishing to load an openssl engine dynamically. The
+function is already written in way that is not specific to tls and was
+moved verbatim.
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ src/crypto/openssl_engine.c                | 98 ++++++++++++++++++++++
+ src/crypto/openssl_engine.h                | 10 +++
+ src/crypto/tls_openssl.c                   | 86 +------------------
+ wpa_supplicant/Android.mk                  | 11 +++
+ wpa_supplicant/Makefile                    | 11 +++
+ wpa_supplicant/nmake.mak                   |  1 +
+ wpa_supplicant/vs2005/wpasvc/wpasvc.vcproj |  4 +
+ 7 files changed, 136 insertions(+), 85 deletions(-)
+ create mode 100644 src/crypto/openssl_engine.c
+ create mode 100644 src/crypto/openssl_engine.h
+
+diff --git a/src/crypto/openssl_engine.c b/src/crypto/openssl_engine.c
+new file mode 100644
+index 000000000..5fbc480d1
+--- /dev/null
++++ b/src/crypto/openssl_engine.c
+@@ -0,0 +1,98 @@
++/*
++ * Engine interface functions for OpenSSL
++ * Copyright (c) 2004-2021, Jouni Malinen <j@w1.fi>
++ *
++ * This software may be distributed under the terms of the BSD license.
++ * See README for more details.
++ */
++
++#include "includes.h"
++
++#include <openssl/engine.h>
++
++#include "common.h"
++#include "openssl_engine.h"
++
++/**
++ * tls_engine_load_dynamic_generic - load any openssl engine
++ * @pre: an array of commands and values that load an engine initialized
++ *       in the engine specific function
++ * @post: an array of commands and values that initialize an already loaded
++ *        engine (or %NULL if not required)
++ * @id: the engine id of the engine to load (only required if post is not %NULL
++ *
++ * This function is a generic function that loads any openssl engine.
++ *
++ * Returns: 0 on success, -1 on failure
++ */
++int tls_engine_load_dynamic_generic(const char *pre[],
++					   const char *post[], const char *id)
++{
++	ENGINE *engine;
++	const char *dynamic_id = "dynamic";
++
++	engine = ENGINE_by_id(id);
++	if (engine) {
++		wpa_printf(MSG_DEBUG, "ENGINE: engine '%s' is already "
++			   "available", id);
++		/*
++		 * If it was auto-loaded by ENGINE_by_id() we might still
++		 * need to tell it which PKCS#11 module to use in legacy
++		 * (non-p11-kit) environments. Do so now; even if it was
++		 * properly initialised before, setting it again will be
++		 * harmless.
++		 */
++		goto found;
++	}
++	ERR_clear_error();
++
++	engine = ENGINE_by_id(dynamic_id);
++	if (engine == NULL) {
++		wpa_printf(MSG_INFO, "ENGINE: Can't find engine %s [%s]",
++			   dynamic_id,
++			   ERR_error_string(ERR_get_error(), NULL));
++		return -1;
++	}
++
++	/* Perform the pre commands. This will load the engine. */
++	while (pre && pre[0]) {
++		wpa_printf(MSG_DEBUG, "ENGINE: '%s' '%s'", pre[0], pre[1]);
++		if (ENGINE_ctrl_cmd_string(engine, pre[0], pre[1], 0) == 0) {
++			wpa_printf(MSG_INFO, "ENGINE: ctrl cmd_string failed: "
++				   "%s %s [%s]", pre[0], pre[1],
++				   ERR_error_string(ERR_get_error(), NULL));
++			ENGINE_free(engine);
++			return -1;
++		}
++		pre += 2;
++	}
++
++	/*
++	 * Free the reference to the "dynamic" engine. The loaded engine can
++	 * now be looked up using ENGINE_by_id().
++	 */
++	ENGINE_free(engine);
++
++	engine = ENGINE_by_id(id);
++	if (engine == NULL) {
++		wpa_printf(MSG_INFO, "ENGINE: Can't find engine %s [%s]",
++			   id, ERR_error_string(ERR_get_error(), NULL));
++		return -1;
++	}
++ found:
++	while (post && post[0]) {
++		wpa_printf(MSG_DEBUG, "ENGINE: '%s' '%s'", post[0], post[1]);
++		if (ENGINE_ctrl_cmd_string(engine, post[0], post[1], 0) == 0) {
++			wpa_printf(MSG_DEBUG, "ENGINE: ctrl cmd_string failed:"
++				" %s %s [%s]", post[0], post[1],
++				   ERR_error_string(ERR_get_error(), NULL));
++			ENGINE_remove(engine);
++			ENGINE_free(engine);
++			return -1;
++		}
++		post += 2;
++	}
++	ENGINE_free(engine);
++
++	return 0;
++}
+diff --git a/src/crypto/openssl_engine.h b/src/crypto/openssl_engine.h
+new file mode 100644
+index 000000000..50e625bac
+--- /dev/null
++++ b/src/crypto/openssl_engine.h
+@@ -0,0 +1,10 @@
++/*
++ * Engine interface functions for OpenSSL
++ * Copyright (c) 2004-2021, Jouni Malinen <j@w1.fi>
++ *
++ * This software may be distributed under the terms of the BSD license.
++ * See README for more details.
++ */
++
++int tls_engine_load_dynamic_generic(const char *pre[],
++					   const char *post[], const char *id);
+diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
+index 345a35ee1..9463574a5 100644
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -23,6 +23,7 @@
+ #include <openssl/x509v3.h>
+ #ifndef OPENSSL_NO_ENGINE
+ #include <openssl/engine.h>
++#include "openssl_engine.h"
+ #endif /* OPENSSL_NO_ENGINE */
+ #ifndef OPENSSL_NO_DSA
+ #include <openssl/dsa.h>
+@@ -778,91 +779,6 @@ static void ssl_info_cb(const SSL *ssl, int where, int ret)
+ 
+ 
+ #ifndef OPENSSL_NO_ENGINE
+-/**
+- * tls_engine_load_dynamic_generic - load any openssl engine
+- * @pre: an array of commands and values that load an engine initialized
+- *       in the engine specific function
+- * @post: an array of commands and values that initialize an already loaded
+- *        engine (or %NULL if not required)
+- * @id: the engine id of the engine to load (only required if post is not %NULL
+- *
+- * This function is a generic function that loads any openssl engine.
+- *
+- * Returns: 0 on success, -1 on failure
+- */
+-static int tls_engine_load_dynamic_generic(const char *pre[],
+-					   const char *post[], const char *id)
+-{
+-	ENGINE *engine;
+-	const char *dynamic_id = "dynamic";
+-
+-	engine = ENGINE_by_id(id);
+-	if (engine) {
+-		wpa_printf(MSG_DEBUG, "ENGINE: engine '%s' is already "
+-			   "available", id);
+-		/*
+-		 * If it was auto-loaded by ENGINE_by_id() we might still
+-		 * need to tell it which PKCS#11 module to use in legacy
+-		 * (non-p11-kit) environments. Do so now; even if it was
+-		 * properly initialised before, setting it again will be
+-		 * harmless.
+-		 */
+-		goto found;
+-	}
+-	ERR_clear_error();
+-
+-	engine = ENGINE_by_id(dynamic_id);
+-	if (engine == NULL) {
+-		wpa_printf(MSG_INFO, "ENGINE: Can't find engine %s [%s]",
+-			   dynamic_id,
+-			   ERR_error_string(ERR_get_error(), NULL));
+-		return -1;
+-	}
+-
+-	/* Perform the pre commands. This will load the engine. */
+-	while (pre && pre[0]) {
+-		wpa_printf(MSG_DEBUG, "ENGINE: '%s' '%s'", pre[0], pre[1]);
+-		if (ENGINE_ctrl_cmd_string(engine, pre[0], pre[1], 0) == 0) {
+-			wpa_printf(MSG_INFO, "ENGINE: ctrl cmd_string failed: "
+-				   "%s %s [%s]", pre[0], pre[1],
+-				   ERR_error_string(ERR_get_error(), NULL));
+-			ENGINE_free(engine);
+-			return -1;
+-		}
+-		pre += 2;
+-	}
+-
+-	/*
+-	 * Free the reference to the "dynamic" engine. The loaded engine can
+-	 * now be looked up using ENGINE_by_id().
+-	 */
+-	ENGINE_free(engine);
+-
+-	engine = ENGINE_by_id(id);
+-	if (engine == NULL) {
+-		wpa_printf(MSG_INFO, "ENGINE: Can't find engine %s [%s]",
+-			   id, ERR_error_string(ERR_get_error(), NULL));
+-		return -1;
+-	}
+- found:
+-	while (post && post[0]) {
+-		wpa_printf(MSG_DEBUG, "ENGINE: '%s' '%s'", post[0], post[1]);
+-		if (ENGINE_ctrl_cmd_string(engine, post[0], post[1], 0) == 0) {
+-			wpa_printf(MSG_DEBUG, "ENGINE: ctrl cmd_string failed:"
+-				" %s %s [%s]", post[0], post[1],
+-				   ERR_error_string(ERR_get_error(), NULL));
+-			ENGINE_remove(engine);
+-			ENGINE_free(engine);
+-			return -1;
+-		}
+-		post += 2;
+-	}
+-	ENGINE_free(engine);
+-
+-	return 0;
+-}
+-
+-
+ /**
+  * tls_engine_load_dynamic_pkcs11 - load the pkcs11 engine provided by opensc
+  * @pkcs11_so_path: pksc11_so_path from the configuration
+diff --git a/wpa_supplicant/Android.mk b/wpa_supplicant/Android.mk
+index f539ce134..cc5239c90 100644
+--- a/wpa_supplicant/Android.mk
++++ b/wpa_supplicant/Android.mk
+@@ -276,6 +276,9 @@ NEED_JSON=y
+ NEED_GAS_SERVER=y
+ NEED_BASE64=y
+ NEED_ASN1=y
++ifndef OPENSSL_NO_ENGINE
++NEED_OPENSSL_ENGINE=y
++endif
+ ifdef CONFIG_DPP2
+ L_CFLAGS += -DCONFIG_DPP2
+ endif
+@@ -1061,6 +1064,9 @@ endif
+ ifeq ($(CONFIG_TLS), openssl)
+ ifdef TLS_FUNCS
+ L_CFLAGS += -DEAP_TLS_OPENSSL
++ifndef OPENSSL_NO_ENGINE
++NEED_OPENSSL_ENGINE=y
++endif
+ OBJS += src/crypto/tls_openssl.c
+ OBJS += src/crypto/tls_openssl_ocsp.c
+ LIBS += -lssl
+@@ -1652,6 +1658,11 @@ OBJS += src/utils/json.c
+ L_CFLAGS += -DCONFIG_JSON
+ endif
+ 
++ifdef NEED_OPENSSL_ENGINE
++OBJS += src/crypto/openssl_engine.o
++CFLAGS += -DCONFIG_OPENSSL_ENGINE
++endi
++
+ OBJS += src/drivers/driver_common.c
+ 
+ OBJS += wpa_supplicant.c events.c bssid_ignore.c wpas_glue.c scan.c
+diff --git a/wpa_supplicant/Makefile b/wpa_supplicant/Makefile
+index 271f2aab3..14cc193da 100644
+--- a/wpa_supplicant/Makefile
++++ b/wpa_supplicant/Makefile
+@@ -291,6 +291,9 @@ NEED_JSON=y
+ NEED_GAS_SERVER=y
+ NEED_BASE64=y
+ NEED_ASN1=y
++ifndef OPENSSL_NO_ENGINE
++NEED_OPENSSL_ENGINE=y
++endif
+ ifdef CONFIG_DPP2
+ CFLAGS += -DCONFIG_DPP2
+ endif
+@@ -1104,6 +1107,9 @@ endif
+ ifeq ($(CONFIG_TLS), openssl)
+ ifdef TLS_FUNCS
+ CFLAGS += -DEAP_TLS_OPENSSL
++ifndef OPENSSL_NO_ENGINE
++NEED_OPENSSL_ENGINE=y
++endif
+ OBJS += ../src/crypto/tls_openssl.o
+ OBJS += ../src/crypto/tls_openssl_ocsp.o
+ LIBS += -lssl
+@@ -1796,6 +1802,11 @@ OBJS += ../src/utils/json.o
+ CFLAGS += -DCONFIG_JSON
+ endif
+ 
++ifdef NEED_OPENSSL_ENGINE
++OBJS += ../src/crypto/openssl_engine.o
++CFLAGS += -DCONFIG_OPENSSL_ENGINE
++endif
++
+ ifdef CONFIG_MODULE_TESTS
+ CFLAGS += -DCONFIG_MODULE_TESTS
+ OBJS += wpas_module_tests.o
+diff --git a/wpa_supplicant/nmake.mak b/wpa_supplicant/nmake.mak
+index 617df036a..195faabe5 100644
+--- a/wpa_supplicant/nmake.mak
++++ b/wpa_supplicant/nmake.mak
+@@ -122,6 +122,7 @@ OBJS = \
+ 	$(OBJDIR)\l2_packet_winpcap.obj \
+ 	$(OBJDIR)\tls_openssl.obj \
+ 	$(OBJDIR)\ms_funcs.obj \
++	$(OBJDIR)\openssl_engine.obj \
+ 	$(OBJDIR)\crypto_openssl.obj \
+ 	$(OBJDIR)\fips_prf_openssl.obj \
+ 	$(OBJDIR)\pcsc_funcs.obj \
+diff --git a/wpa_supplicant/vs2005/wpasvc/wpasvc.vcproj b/wpa_supplicant/vs2005/wpasvc/wpasvc.vcproj
+index 82d9033ff..b0b51a02c 100755
+--- a/wpa_supplicant/vs2005/wpasvc/wpasvc.vcproj
++++ b/wpa_supplicant/vs2005/wpasvc/wpasvc.vcproj
+@@ -394,6 +394,10 @@
+ 				RelativePath="..\..\scan.c"
+ 				>
+ 			</File>
++			<File
++				RelativePath="..\..\..\src\crypto\openssl_engine.c"
++				>
++			</File>
+ 			<File
+ 				RelativePath="..\..\..\src\crypto\sha1.c"
+ 				>
+-- 
+2.20.1
+

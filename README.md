@@ -1,14 +1,37 @@
 # Wi-Fi Zero Touch Provisioning (ZTP)
+
+![ZTP Penguin](docs/ztppenguin.png)
+
 This project provides a Wi-Fi zero touch provisioning library and daemon for Linux. It supports provisioning of Wi-Fi credentials using [Wi-Fi Easy Connect](https://www.wi-fi.org/discover-wi-fi/wi-fi-easy-connect), also known as the Device Provisioning Protocol (DPP).
 
 ## Building
-### Ubuntu (bionic, focal)
+
+### Ubuntu (focal)
+
 Install package dependencies:
+
+```bash
+sudo apt install          \
+ build-essential          \
+ cmake                    \ 
+ git                      \ 
+ libboost-filesystem-dev  \
+ libboost-random-dev      \ 
+ libboost-regex-dev       \
+ libboost-system-dev      \
+ libboost-thread-dev      \
+ libbrotli-dev            \
+ libgpiod-dev             \
+ libjson-c-dev            \
+ libssl-dev               \
+ libsystemd-dev           \
+ pkg-config               \
+ zlib1g-dev               \
 ```
-sudo apt install -y build-essential git cmake libssl-dev libboost-system-dev libsystemd-dev libjson-c-dev libgpiod-dev libboost-random-dev libboost-thread-dev libboost-filesystem-dev libboost-regex-dev zlib1g-dev libbrotli-dev pkg-config
-```
+
 Checkout and build:
-```
+
+```bash
 git clone git@github.com:microsoft/wifi-ztp.git
 cd wifi-ztp
 mkdir build && cd $_
@@ -20,7 +43,7 @@ make
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+the rights to use your contribution. For details, visit [https://cla.opensource.microsoft.com](https://cla.opensource.microsoft.com).
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide
 a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions

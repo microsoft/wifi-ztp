@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=com.microsoft.ztp1
+Exec=/bin/false
+User=root
+SystemdService=ztpd.service

@@ -1,0 +1,23 @@
+{
+    "ui.activation": [ "command", "gpio" ],
+    "ui.activation.unit": "hostapd.service",
+    "ui.activation.gpio": {
+        "chip": "gpiochip2",
+        "line": 24,
+        "debounceDelay": 50
+    },
+    "device.roles.exclusive": true,
+    "device.roles.activated": [ "enrollee" ],
+    "device.roles": [
+        {
+            "role": "enrollee",
+            "interface": "wlan0",
+            "settingsPath": "/etc/ztpd/config-enrollee.json"
+        },
+        {
+            "role": "configurator",
+            "interface": "wlan1",
+            "settingsPath": "/etc/ztpd/config-configurator.json"
+        }
+    ]
+}

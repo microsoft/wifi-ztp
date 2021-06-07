@@ -1,0 +1,69 @@
+From 3cb6bd3d1fc930ec19028426673fdb04f8bb69fa Mon Sep 17 00:00:00 2001
+From: Andrew Beltrano <anbeltra@microsoft.com>
+Date: Tue, 6 Apr 2021 15:24:07 -0600
+Subject: [PATCH 1/8] Add helper function to read file link targets.
+
+Signed-off-by: Andrew Beltrano <anbeltra@microsoft.com>
+---
+ src/utils/common.c | 29 +++++++++++++++++++++++++++++
+ src/utils/common.h |  2 ++
+ 2 files changed, 31 insertions(+)
+
+diff --git a/src/utils/common.c b/src/utils/common.c
+index 2c1275193..999e4ebe3 100644
+--- a/src/utils/common.c
++++ b/src/utils/common.c
+@@ -8,6 +8,7 @@
+ 
+ #include "includes.h"
+ #include <limits.h>
++#include <sys/stat.h>
+ 
+ #include "common/ieee802_11_defs.h"
+ #include "common.h"
+@@ -1302,3 +1303,31 @@ void forced_memzero(void *ptr, size_t len)
+ 	if (len)
+ 		forced_memzero_val = ((u8 *) ptr)[0];
+ }
++
++int read_link_target(const char *name, char **target)
++{
++	ssize_t len;
++	char *path;
++	struct stat statbuf;
++
++	if (lstat(name, &statbuf) < 0)
++		return -1;
++	if (!S_ISLNK(statbuf.st_mode)) {
++		*target = NULL;
++		return 0;
++	}
++
++	path = os_malloc(statbuf.st_size+1);
++	if (!path) 
++		return -1;
++
++	len = readlink(name, path, statbuf.st_size+1);
++	if (len < 0 || len > statbuf.st_size) {
++		os_free(path);
++		return -1;
++	}
++
++	path[len] = '\0';
++	*target = path;
++	return 0;
++}
+diff --git a/src/utils/common.h b/src/utils/common.h
+index 45f72bb30..51e88df98 100644
+--- a/src/utils/common.h
++++ b/src/utils/common.h
+@@ -595,4 +595,6 @@ void * __hide_aliasing_typecast(void *foo);
+ #define WPA_MEM_DEFINED(ptr, len) do { } while (0)
+ #endif /* CONFIG_VALGRIND */
+ 
++int read_link_target(const char *name, char **target);
++
+ #endif /* COMMON_H */
+-- 
+2.20.1
+
