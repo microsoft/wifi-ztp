@@ -85,9 +85,10 @@ function main() {
     echo "tagging as ${RELEASE_VERSION_TAG}"
     git tag ${RELEASE_VERSION_TAG} ${FORCE} >& ${REDIRECT}
     git push origin refs/tags/${RELEASE_VERSION_TAG} ${FORCE} >& ${REDIRECT}
+    pushd -0 && dirs -c
 
     echo "preparing release archive"
-    git config tar.tar.xz "xz -c"
+    git config tar.tar.xz.command "xz -c"
     git archive --format=tar.xz --prefix=${RELEASE_NAME}/ ${RELEASE_VERSION_TAG} > ${RELEASE_ARCHIVE}
     echo "created release archive ${RELEASE_ARCHIVE} -> $(sha256sum ${RELEASE_ARCHIVE} | awk '{print $1}')"
 }
