@@ -11,22 +11,7 @@ This project provides a Wi-Fi zero touch provisioning library and daemon for Lin
 Install package dependencies:
 
 ```bash
-sudo apt install          \
- build-essential          \
- cmake                    \ 
- git                      \ 
- libboost-filesystem-dev  \
- libboost-random-dev      \ 
- libboost-regex-dev       \
- libboost-system-dev      \
- libboost-thread-dev      \
- libbrotli-dev            \
- libgpiod-dev             \
- libjson-c-dev            \
- libssl-dev               \
- libsystemd-dev           \
- pkg-config               \
- zlib1g-dev               \
+sudo apt install build-essential cmake git libboost-filesystem-dev libboost-random-dev libboost-regex-dev libboost-system-dev libboost-thread-dev libbrotli-dev libgpiod-dev libjson-c-dev libssl-dev libsystemd-dev pkg-config zlib1g-dev
 ```
 
 Checkout and build:
