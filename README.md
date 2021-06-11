@@ -21,7 +21,7 @@ git clone git@github.com:microsoft/wifi-ztp.git
 cd wifi-ztp
 mkdir build && cd $_
 cmake ..
-make
+make -j $(nproc)
 ```
 
 ## Contributing
