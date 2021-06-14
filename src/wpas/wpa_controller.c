@@ -820,8 +820,9 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
 int
 wpa_controller_qrcode(struct wpa_controller *ctrl, const char *dpp_uri, uint32_t *bootstrap_id)
 {
-    char reply[WPA_MAX_MSG_SIZE];
-    size_t reply_length = sizeof reply;
+    char reply[WPA_MAX_MSG_SIZE + 1];
+    explicit_bzero(reply, sizeof reply);
+    size_t reply_length = WPA_MAX_MSG_SIZE;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_QR_CODE", reply, &reply_length, "%s", dpp_uri);
     if (ret < 0)
@@ -975,8 +976,9 @@ wpa_controller_dpp_bootstrap_set(struct wpa_controller *ctrl, uint32_t peer_id, 
 int
 wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_bootstrap_info *bi, uint32_t *id)
 {
-    char reply[WPA_MAX_MSG_SIZE];
-    size_t reply_length = sizeof reply;
+    char reply[WPA_MAX_MSG_SIZE + 1];
+    explicit_bzero(reply,sizeof reply);
+    size_t reply_length = WPA_MAX_MSG_SIZE;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_BOOTSTRAP_GEN", reply, &reply_length, 
         "type=%s %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
