@@ -79,8 +79,9 @@ ztpd_uninitialize(struct ztpd *ztpd);
  * epoll is used to wait for changes on a set of monitored file descriptors.
  *
  * @param ztpd The global ztpd instance.
+ * @return 0 if success, an error code otherwise
  */
-void
+int
 ztpd_run(struct ztpd *ztpd);
 
 #endif
