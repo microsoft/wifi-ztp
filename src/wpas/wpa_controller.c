@@ -301,7 +301,7 @@ wpa_controller_process_event_dpp_configuration_success(struct wpa_controller *ct
 static void
 wpa_controller_process_event(struct wpa_controller *ctrl)
 {
-    char buf[WPA_MAX_MSG_SIZE];
+    char buf[WPA_MAX_MSG_SIZE + 1];
     size_t buf_length = (sizeof buf) - 1;
 
     int ret = wpa_ctrl_recv(ctrl->event, buf, &buf_length);
@@ -759,7 +759,7 @@ static int
 __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, char *reply, size_t *reply_length, const char *fmt, ...)
 {
     int ret;
-    char cmd[WPA_MAX_MSG_SIZE];
+    char cmd[WPA_MAX_MSG_SIZE + 1];
 
     if (!ctrl->connected) {
         zlog_error_if(ctrl->interface, "no connection to control interface");
@@ -860,7 +860,7 @@ wpa_controller_qrcode(struct wpa_controller *ctrl, const char *dpp_uri, uint32_t
 int
 wpa_controller_set(struct wpa_controller *ctrl, const char *key, const char *value)
 {
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "SET", reply, &reply_length, "%s %s", key, value);
@@ -888,7 +888,7 @@ int
 wpa_controller_dpp_auth_init(struct wpa_controller *ctrl, uint32_t peer_id, uint32_t frequency)
 {
     int ret;
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     if (frequency > 0) {
@@ -923,7 +923,7 @@ int
 wpa_controller_dpp_auth_init_with_conf(struct wpa_controller *ctrl, uint32_t peer_id, uint32_t frequency, const char *conf)
 {
     int ret;
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     if (frequency > 0) {
@@ -953,7 +953,7 @@ wpa_controller_dpp_auth_init_with_conf(struct wpa_controller *ctrl, uint32_t pee
 int
 wpa_controller_dpp_bootstrap_set(struct wpa_controller *ctrl, uint32_t peer_id, const char *conf)
 {
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_BOOTSTRAP_SET", reply, &reply_length, "%" PRIu32 " %s", peer_id, conf);
@@ -1016,7 +1016,7 @@ wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_b
 int
 wpa_controller_dpp_chirp(struct wpa_controller *ctrl, uint32_t bootstrap_key_id, uint32_t iterations)
 {
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_CHIRP", reply, &reply_length, "own=%" PRIu32 " iter=%" PRIu32, bootstrap_key_id, iterations);
@@ -1035,7 +1035,7 @@ wpa_controller_dpp_chirp(struct wpa_controller *ctrl, uint32_t bootstrap_key_id,
 int
 wpa_controller_dpp_chirp_stop(struct wpa_controller *ctrl)
 {
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_command(ctrl, "DPP_STOP_CHIRP", reply, &reply_length);
@@ -1052,7 +1052,7 @@ wpa_controller_dpp_chirp_stop(struct wpa_controller *ctrl)
 int
 wpa_controller_dpp_listen_stop(struct wpa_controller *ctrl)
 {
-    char reply[WPA_MAX_MSG_SIZE];
+    char reply[WPA_MAX_MSG_SIZE + 1];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_command(ctrl, "DPP_STOP_LISTEN", reply, &reply_length);
