@@ -47,9 +47,9 @@ these roles, a separate configuration file is specified by providing its absolut
 
 When the primary configuration file specifies that the Wi-Fi EasyConnect `enrollee` device role is supported, it also specifies its configuration file. This file describes enrollee options, including information about the bootstrapping key. Each configuration file option is specified in [config-enrollee.schema.json](samples/ztpd/config/config-enrollee.schema.json), and an example configuration file can be found [here](/samples/ztpd/config/config-enrollee.json).
 
-#### Configuration configuration file
+#### Configurator configuration file
 
-When the primary configuration file specifies that the Wi-Fi EasyConnect `configurator` device role is supported, it also specifies its configuration file. This file describes configurator options, including information regarding enrollee bootstrapping information. Each configuration file option is specified in [config-enrollee.schema.json](samples/ztpd/config/config-enrollee.schema.json), and an example configuration file can be found [here](/samples/ztpd/config/config-enrollee.json). Enrollee bootstrapping information is provided by _bootstrapping information providers (BIPs)_, which are specified in the configuration file. Currently, there are two built-in providers:
+When the primary configuration file specifies that the Wi-Fi EasyConnect `configurator` device role is supported, it also specifies its configuration file. This file describes configurator options, including information regarding enrollee bootstrapping information. Each configuration file option is specified in [config-enrollee.schema.json](samples/ztpd/config/config-configurator.schema.json), and an example configuration file can be found [here](/samples/ztpd/config/config-configurator.json). Enrollee bootstrapping information is provided by _bootstrapping information providers (BIPs)_, which are specified in the configuration file. Currently, there are two built-in providers:
 
 ##### Azure Device Provisioning Service (DPS)
 
