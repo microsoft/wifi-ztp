@@ -60,11 +60,11 @@ This bootstrapping information provider sources enrollee bootstrapping records f
     "ZeroTouchProvisioning": {
         "WiFi": {
             "Interfaces": [
-                "wlan0": {
-                    "DppUri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACE0vdn8KsfXKHusJPcEscx+naQyQJLSob1VjuqPsP6r8=;;"
+                {
+                    "DppUri": "DPP:V:2;M:d8c0a65935ed;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACE0vdn8KsfXKHusJPcEscx+naQyQJLSob1VjuqPsP6r8=;;"
                 },
-                "wlan1": {
-                    "DppUri": "DPP:V:2;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACiLN+2Rk4tRlwl4CKYkSEdheJIEbZO5UBr9SPoPFI394=;;"
+                {
+                    "DppUri": "DPP:V:2;M:70665509b591;K:MDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACiLN+2Rk4tRlwl4CKYkSEdheJIEbZO5UBr9SPoPFI394=;;"
                 }
             ]
         }
