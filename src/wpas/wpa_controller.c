@@ -784,7 +784,7 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
         zlog_error_if(ctrl->interface, "failed to send %s command on ctrl interface (%d)", name, ret);
         return ret;
     }
-    reply[*reply_length] = '\0';
+    reply[*reply_length > WPA_MAX_MSG_SIZE? WPA_MAX_MSG_SIZE : *reply_length] = '\0';
 
     zlog_debug_if(ctrl->interface, "wpa <- %.*s", (int)(*reply_length), reply);
 
