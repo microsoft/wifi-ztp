@@ -746,12 +746,12 @@ wpa_controller_destroy(struct wpa_controller **ctrl)
  *
  * @param ctrl The control interface to send the command on.
  * @param name The name of the command to send.
- * @param reply The buffer to hold the reply.
+ * @param reply The buffer to hold the reply. This must have enough space for the reply and a null terminator.
  * @param reply_length The size of the reply buffer. Will be updated with the actual reply length on success.
  * @param fmt The string format of the following arguments constituting the command payload.
  * @param ... The arguments constituting the command payload.
  * @return int 0 if the command was successfully sent. In this case, 'reply'
- * shall contain a *reply_length response from the control interface. -ENOTCON
+ * shall contain a NULL-terminated *reply_length response from the control interface. -ENOTCON
  * is returned if there is no established connection to the control socket.
  * Otherwise, a non-zero value is returned.
  */
@@ -784,6 +784,7 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
         zlog_error_if(ctrl->interface, "failed to send %s command on ctrl interface (%d)", name, ret);
         return ret;
     }
+    reply[*reply_length] = '\0';
 
     zlog_debug_if(ctrl->interface, "wpa <- %.*s", (int)(*reply_length), reply);
 
@@ -821,13 +822,11 @@ int
 wpa_controller_qrcode(struct wpa_controller *ctrl, const char *dpp_uri, uint32_t *bootstrap_id)
 {
     char reply[WPA_MAX_MSG_SIZE + 1];
-    size_t reply_length = WPA_MAX_MSG_SIZE;
+    size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_QR_CODE", reply, &reply_length, "%s", dpp_uri);
     if (ret < 0)
         return ret;
-
-    reply[reply_length] = '\0';
 
     uint32_t id = (uint32_t)strtoul(reply, NULL, 10);
     if (id == 0) {
@@ -978,7 +977,7 @@ int
 wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_bootstrap_info *bi, uint32_t *id)
 {
     char reply[WPA_MAX_MSG_SIZE + 1];
-    size_t reply_length = WPA_MAX_MSG_SIZE;
+    size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_BOOTSTRAP_GEN", reply, &reply_length, 
         "type=%s %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
@@ -993,8 +992,6 @@ wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_b
         bi->engine_path  ? " engine_path=" : "", bi->engine_path ? bi->engine_path : "");
     if (ret < 0)
         return ret;
-
-    reply[reply_length] = '\0';
 
     uint32_t id_reply = (uint32_t)strtoul(reply, NULL, 0);
     if (id_reply == 0)
