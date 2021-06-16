@@ -746,8 +746,8 @@ wpa_controller_destroy(struct wpa_controller **ctrl)
  *
  * @param ctrl The control interface to send the command on.
  * @param name The name of the command to send.
- * @param reply The buffer to hold the reply. This must have enough space for the reply and a null terminator.
- * @param reply_length The size of the reply buffer. Will be updated with the actual reply length on success.
+ * @param reply The buffer to hold the reply. This must have enough space for a null terminator.
+ * @param reply_length The size of the buffer (including the space for null byte). Will be updated with the actual reply length (minus the null byte) on success.
  * @param fmt The string format of the following arguments constituting the command payload.
  * @param ... The arguments constituting the command payload.
  * @return int 0 if the command was successfully sent. In this case, 'reply'
@@ -758,6 +758,11 @@ wpa_controller_destroy(struct wpa_controller **ctrl)
 static int
 __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, char *reply, size_t *reply_length, const char *fmt, ...)
 {
+    if (*reply_length==0) {
+        zlog_error_if(ctrl->interface, "buffer size doesn't have space for the null byte");
+        return -1;
+    }
+
     int ret;
     char cmd[WPA_MAX_MSG_SIZE + 1];
 
@@ -779,12 +784,16 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
     size_t cmd_length = (size_t)ret;
     zlog_debug_if(ctrl->interface, "wpa -> %.*s", (int)cmd_length, cmd);
 
+    // exclude the null byte from the buffer size
+    *reply_length = *reply_length-1;
+
+    // wpa_ctrl_request will stop reading at *reply_length bytes, ensuring buffer safety
     ret = wpa_ctrl_request(ctrl->command, cmd, cmd_length, reply, reply_length, NULL);
     if (ret < 0) {
         zlog_error_if(ctrl->interface, "failed to send %s command on ctrl interface (%d)", name, ret);
         return ret;
     }
-    reply[*reply_length > WPA_MAX_MSG_SIZE? WPA_MAX_MSG_SIZE : *reply_length] = '\0';
+    reply[*reply_length] = '\0';
 
     zlog_debug_if(ctrl->interface, "wpa <- %.*s", (int)(*reply_length), reply);
 
