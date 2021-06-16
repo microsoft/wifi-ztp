@@ -785,7 +785,7 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
     zlog_debug_if(ctrl->interface, "wpa -> %.*s", (int)cmd_length, cmd);
 
     // exclude the null byte from the buffer size
-    *reply_length = *reply_length-1;
+    *reply_length = *reply_length - 1;
 
     // wpa_ctrl_request will stop reading at *reply_length bytes, ensuring buffer safety
     ret = wpa_ctrl_request(ctrl->command, cmd, cmd_length, reply, reply_length, NULL);
