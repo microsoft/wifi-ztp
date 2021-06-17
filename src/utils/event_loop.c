@@ -617,15 +617,15 @@ event_loop_unregister_event(struct event_loop *loop, int fd)
  * loop iteration.
  *
  * @param loop The event loop instance.
- * @param retval The return value, 0 if success, an error code otherwise
+ * @param exit_code The return value, 0 if success, an error code otherwise
  * @return 0 if it exited cleanly, an error code otherwise
  */
 int
-event_loop_stop(struct event_loop *loop, int retval)
+event_loop_stop(struct event_loop *loop, int exit_code)
 {
     loop->terminate_pending = true;
-    loop->exit_code = retval;
-    return retval;
+    loop->exit_code = -abs(exit_code);
+    return exit_code;
 }
 
 /**

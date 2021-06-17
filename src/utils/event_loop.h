@@ -198,11 +198,11 @@ event_loop_uninitialize(struct event_loop *loop);
  * loop iteration.
  *
  * @param loop The event loop instance.
- * @param retval The return value, 0 if success, an error code otherwise
+ * @param exit_code The return value, 0 if success, an error code otherwise
  * @return 0 if it exited cleanly, an error code otherwise
  */
 int
-event_loop_stop(struct event_loop *loop, int retval);
+event_loop_stop(struct event_loop *loop, int exit_code);
 
 /**
  * @brief Runs the event loop. This uses the calling thread to wait for changes

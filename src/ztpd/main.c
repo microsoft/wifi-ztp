@@ -305,7 +305,7 @@ main(int argc, char *argv[])
     ret = ztpd_run(&ztpd);
     if (ret < 0) {
         zlog_panic("ztpd did not exit cleanly (%d)", ret);
-        return -1;
+        return ret;
     }
 
     zlog_debug("event loop completed");
