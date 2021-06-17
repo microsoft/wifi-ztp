@@ -758,9 +758,14 @@ wpa_controller_destroy(struct wpa_controller **ctrl)
 static int
 __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, char *reply, size_t *reply_length, const char *fmt, ...)
 {
+    if(reply_length == NULL) {
+        zlog_error_if(ctrl->interface, "reply_length is a NULL-pointer");
+        return -1;
+    }
+
     if (*reply_length == 0) {
         zlog_error_if(ctrl->interface, "buffer size doesn't have space for the null terminator");
-        return -1;
+        return -ENOMEM;
     }
 
     int ret;
