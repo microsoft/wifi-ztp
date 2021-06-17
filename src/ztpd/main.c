@@ -132,7 +132,7 @@ on_signal_received(int fd, void *context)
     switch (siginfo.ssi_signo) {
         case SIGINT:
         case SIGTERM:
-            event_loop_stop((struct event_loop *)context);
+            event_loop_stop((struct event_loop *)context, -((int) siginfo.ssi_signo));
             break;
         default:
             break;
@@ -302,7 +302,11 @@ main(int argc, char *argv[])
         }
     }
 
-    ztpd_run(&ztpd);
+    ret = ztpd_run(&ztpd);
+    if (ret < 0) {
+        zlog_panic("ztpd did not exit cleanly (%d)", ret);
+        return ret;
+    }
 
     zlog_debug("event loop completed");
 

@@ -357,11 +357,12 @@ process_fd_update_ui_activation(int fd, void *context)
  * epoll is used to wait for changes on a set of monitored file descriptors.
  *
  * @param ztpd The global ztpd instance.
+ * @return 0 if success, an error code otherwise
  */
-void
+int
 ztpd_run(struct ztpd *ztpd)
 {
-    event_loop_run(ztpd->loop);
+    return event_loop_run(ztpd->loop);
 }
 
 /**

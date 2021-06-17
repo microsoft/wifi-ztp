@@ -617,11 +617,15 @@ event_loop_unregister_event(struct event_loop *loop, int fd)
  * loop iteration.
  *
  * @param loop The event loop instance.
+ * @param exit_code The return value, 0 if success, an error code otherwise
+ * @return 0 if it exited cleanly, an error code otherwise
  */
-void
-event_loop_stop(struct event_loop *loop)
+int
+event_loop_stop(struct event_loop *loop, int exit_code)
 {
     loop->terminate_pending = true;
+    loop->exit_code = -abs(exit_code);
+    return exit_code;
 }
 
 /**
@@ -649,8 +653,9 @@ event_loop_process_update(struct event_loop *loop, struct epoll_event *event)
  * until the event_loop_stop() function is called.
  *
  * @param loop The event loop instance.
+ * @return 0 if it exited cleanly, else an error code
  */
-void
+int
 event_loop_run(struct event_loop *loop)
 {
     for (;;) {
@@ -665,7 +670,7 @@ event_loop_run(struct event_loop *loop)
 
         if (loop->terminate_pending) {
             loop->terminate_pending = false;
-            break;
+            return loop->exit_code;
         }
     }
 }

@@ -44,6 +44,7 @@ struct event_loop {
     size_t events_max;
     struct epoll_event *events;
     struct event_dispatch dispatch;
+    int exit_code;
 };
 
 /**
@@ -197,9 +198,11 @@ event_loop_uninitialize(struct event_loop *loop);
  * loop iteration.
  *
  * @param loop The event loop instance.
+ * @param exit_code The return value, 0 if success, an error code otherwise
+ * @return 0 if it exited cleanly, an error code otherwise
  */
-void
-event_loop_stop(struct event_loop *loop);
+int
+event_loop_stop(struct event_loop *loop, int exit_code);
 
 /**
  * @brief Runs the event loop. This uses the calling thread to wait for changes
@@ -207,8 +210,9 @@ event_loop_stop(struct event_loop *loop);
  * until the event_loop_stop() function is called.
  *
  * @param loop The event loop instance.
+ * @return 0 if it exited cleanly, an error code otherwise
  */
-void
+int
 event_loop_run(struct event_loop *loop);
 
 #endif //__EVENT_LOOP_H__
