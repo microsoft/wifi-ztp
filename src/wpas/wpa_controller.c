@@ -301,7 +301,7 @@ wpa_controller_process_event_dpp_configuration_success(struct wpa_controller *ct
 static void
 wpa_controller_process_event(struct wpa_controller *ctrl)
 {
-    char buf[WPA_MAX_MSG_SIZE + 1];
+    char buf[WPA_MAX_MSG_SIZE];
     size_t buf_length = (sizeof buf) - 1;
 
     int ret = wpa_ctrl_recv(ctrl->event, buf, &buf_length);
@@ -746,30 +746,20 @@ wpa_controller_destroy(struct wpa_controller **ctrl)
  *
  * @param ctrl The control interface to send the command on.
  * @param name The name of the command to send.
- * @param reply The buffer to hold the reply. This must have enough space for a null terminator.
- * @param reply_length The size of the buffer (including the space for null byte). Will be updated with the actual reply length (minus the null byte) on success.
+ * @param reply The buffer to hold the reply.
+ * @param reply_length The size of the reply buffer. Will be updated with the actual reply length on success.
  * @param fmt The string format of the following arguments constituting the command payload.
  * @param ... The arguments constituting the command payload.
  * @return int 0 if the command was successfully sent. In this case, 'reply'
- * shall contain a NULL-terminated *reply_length response from the control interface. -ENOTCON
+ * shall contain a *reply_length response from the control interface. -ENOTCON
  * is returned if there is no established connection to the control socket.
  * Otherwise, a non-zero value is returned.
  */
 static int
 __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, char *reply, size_t *reply_length, const char *fmt, ...)
 {
-    if(reply_length == NULL) {
-        zlog_error_if(ctrl->interface, "reply_length is a NULL-pointer");
-        return -1;
-    }
-
-    if (*reply_length == 0) {
-        zlog_error_if(ctrl->interface, "buffer size doesn't have space for the null terminator");
-        return -ENOMEM;
-    }
-
     int ret;
-    char cmd[WPA_MAX_MSG_SIZE + 1];
+    char cmd[WPA_MAX_MSG_SIZE];
 
     if (!ctrl->connected) {
         zlog_error_if(ctrl->interface, "no connection to control interface");
@@ -789,16 +779,11 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
     size_t cmd_length = (size_t)ret;
     zlog_debug_if(ctrl->interface, "wpa -> %.*s", (int)cmd_length, cmd);
 
-    // exclude the null byte from the buffer size
-    *reply_length = *reply_length - 1;
-
-    // wpa_ctrl_request will stop reading at *reply_length bytes, ensuring buffer safety
     ret = wpa_ctrl_request(ctrl->command, cmd, cmd_length, reply, reply_length, NULL);
     if (ret < 0) {
         zlog_error_if(ctrl->interface, "failed to send %s command on ctrl interface (%d)", name, ret);
         return ret;
     }
-    reply[*reply_length] = '\0';
 
     zlog_debug_if(ctrl->interface, "wpa <- %.*s", (int)(*reply_length), reply);
 
@@ -835,7 +820,7 @@ __wpa_controller_send_commandf(struct wpa_controller *ctrl, const char *name, ch
 int
 wpa_controller_qrcode(struct wpa_controller *ctrl, const char *dpp_uri, uint32_t *bootstrap_id)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_QR_CODE", reply, &reply_length, "%s", dpp_uri);
@@ -873,7 +858,7 @@ wpa_controller_qrcode(struct wpa_controller *ctrl, const char *dpp_uri, uint32_t
 int
 wpa_controller_set(struct wpa_controller *ctrl, const char *key, const char *value)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "SET", reply, &reply_length, "%s %s", key, value);
@@ -901,7 +886,7 @@ int
 wpa_controller_dpp_auth_init(struct wpa_controller *ctrl, uint32_t peer_id, uint32_t frequency)
 {
     int ret;
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     if (frequency > 0) {
@@ -936,7 +921,7 @@ int
 wpa_controller_dpp_auth_init_with_conf(struct wpa_controller *ctrl, uint32_t peer_id, uint32_t frequency, const char *conf)
 {
     int ret;
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     if (frequency > 0) {
@@ -966,7 +951,7 @@ wpa_controller_dpp_auth_init_with_conf(struct wpa_controller *ctrl, uint32_t pee
 int
 wpa_controller_dpp_bootstrap_set(struct wpa_controller *ctrl, uint32_t peer_id, const char *conf)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_BOOTSTRAP_SET", reply, &reply_length, "%" PRIu32 " %s", peer_id, conf);
@@ -990,7 +975,7 @@ wpa_controller_dpp_bootstrap_set(struct wpa_controller *ctrl, uint32_t peer_id, 
 int
 wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_bootstrap_info *bi, uint32_t *id)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_BOOTSTRAP_GEN", reply, &reply_length, 
@@ -1027,7 +1012,7 @@ wpa_controller_dpp_bootstrap_gen(struct wpa_controller *ctrl, const struct dpp_b
 int
 wpa_controller_dpp_chirp(struct wpa_controller *ctrl, uint32_t bootstrap_key_id, uint32_t iterations)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_commandf(ctrl, "DPP_CHIRP", reply, &reply_length, "own=%" PRIu32 " iter=%" PRIu32, bootstrap_key_id, iterations);
@@ -1046,7 +1031,7 @@ wpa_controller_dpp_chirp(struct wpa_controller *ctrl, uint32_t bootstrap_key_id,
 int
 wpa_controller_dpp_chirp_stop(struct wpa_controller *ctrl)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_command(ctrl, "DPP_STOP_CHIRP", reply, &reply_length);
@@ -1063,7 +1048,7 @@ wpa_controller_dpp_chirp_stop(struct wpa_controller *ctrl)
 int
 wpa_controller_dpp_listen_stop(struct wpa_controller *ctrl)
 {
-    char reply[WPA_MAX_MSG_SIZE + 1];
+    char reply[WPA_MAX_MSG_SIZE];
     size_t reply_length = sizeof reply;
 
     int ret = wpa_controller_send_command(ctrl, "DPP_STOP_LISTEN", reply, &reply_length);
