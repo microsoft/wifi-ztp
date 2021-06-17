@@ -132,7 +132,7 @@ on_signal_received(int fd, void *context)
     switch (siginfo.ssi_signo) {
         case SIGINT:
         case SIGTERM:
-            event_loop_stop((struct event_loop *)context, (int) siginfo.ssi_signo);
+            event_loop_stop((struct event_loop *)context, -((int) siginfo.ssi_signo));
             break;
         default:
             break;
