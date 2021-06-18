@@ -268,6 +268,8 @@ event_loop_initialize(struct event_loop *loop)
     int ret = event_loop_epoll_initialize(loop);
     if (ret < 0)
         return ret;
+    
+    loop->exit_code = 0;
 
     return 0;
 }
