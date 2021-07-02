@@ -1,6 +1,6 @@
 
 project(ztpcore
-    VERSION 0.4.2
+    VERSION 0.4.2.0
 )
 
 add_library(ztpcore
