@@ -17,6 +17,7 @@
 #include "ztp_log.h"
 #include "ztp_settings.h"
 #include "ztp_wpa_supplicant.h"
+#include "ztp_version.h"
 #include "ztpd.h"
 
 /**
@@ -207,6 +208,9 @@ main(int argc, char *argv[])
     struct event_loop loop;
     struct ztp_wpa_supplicant wpas;
     struct ztp_dbus_network_configuration_manager *network_configuration_manager;
+
+    zlog_info("ztpd v%u.%u.%u.%u", 
+        ZTP_VERSION_MAJOR, ZTP_VERSION_MINOR, ZTP_VERSION_PATCH, ZTP_VERSION_TWEAK);
 
     // Process command line options.
     for (;;) {
