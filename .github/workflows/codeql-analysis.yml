@@ -42,7 +42,7 @@ jobs:
       run: |
         mkdir build && cd $_
         cmake ..
-        make -j$(nproc)
+        sudo make -j$(nproc)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
