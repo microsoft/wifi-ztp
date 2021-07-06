@@ -1,0 +1,48 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+  schedule:
+    - cron: '44 10 * * 4'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-20.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'cpp' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install build-essential cmake git libboost-filesystem-dev libboost-random-dev libboost-regex-dev libboost-system-dev libboost-thread-dev libbrotli-dev libgpiod-dev libjson-c-dev libssl-dev libsystemd-dev pkg-config zlib1g-dev
+
+    - name: Build
+      run: |
+        mkdir build && cd $_
+        cmake ..
+        sudo make -j$(nproc)
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
