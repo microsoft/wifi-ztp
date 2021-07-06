@@ -306,18 +306,18 @@ wpa_controller_process_event(struct wpa_controller *ctrl)
 
     int ret = wpa_ctrl_recv(ctrl->event, buf, &buf_length);
     if (ret < 0) {
-        zlog_error("[%s] failed to retrieve pending wpa control event (%d)", ctrl->interface, ret);
+        zlog_error_if(ctrl->interface, "failed to retrieve pending wpa control event (%d)", ret);
         return;
     }
 
     buf[buf_length] = '\0';
-    zlog_debug("[%s] event=%s", ctrl->interface, buf);
+    zlog_debug_if(ctrl->interface, "event=%s", buf);
 
     // Each message begins with an integer priority between angle brackets,
     // <priority=#>. Find the ending angle bracket.
     const char *start = strchr(buf, '>');
     if (!start) {
-        zlog_warning("[%s] malformed wpa control message detected", ctrl->interface);
+        zlog_warning_if(ctrl->interface, "malformed wpa control message detected");
         return;
     }
 
@@ -366,7 +366,7 @@ on_wpa_controller_event(int fd, void *context)
     for (;;) {
         int ret = wpa_ctrl_pending(ctrl->event);
         if (ret < 0) {
-            zlog_error("[%s] failed to determine if wpa control event is pending; possible disconnection", ctrl->interface);
+            zlog_error_if(ctrl->interface, "failed to determine if wpa control event is pending; possible disconnection");
             break;
         } else if (ret == 0) {
             break;
@@ -388,27 +388,27 @@ wpa_controller_connection_establish(struct wpa_controller *ctrl)
     int ret;
     struct wpa_ctrl *ctrl_command = wpa_ctrl_open(ctrl->path);
     if (!ctrl_command) {
-        zlog_error("[%s] failed to establish wpa control command connection using control file %s", ctrl->interface, ctrl->path);
+        zlog_error_if(ctrl->interface, "failed to establish wpa control command connection using control file %s", ctrl->path);
         return -ENODEV;
     }
 
     struct wpa_ctrl *ctrl_event = wpa_ctrl_open(ctrl->path);
     if (!ctrl_event) {
-        zlog_error("[%s] failed to establish wpa control event connection using control file %s", ctrl->interface, ctrl->path);
+        zlog_error_if(ctrl->interface, "failed to establish wpa control event connection using control file %s", ctrl->path);
         ret = -ENODEV;
         goto fail;
     }
 
     ret = wpa_ctrl_attach(ctrl_event);
     if (ret < 0) {
-        zlog_error("[%s] failed to attach to wpa control event feed using control file %s (%d)", ctrl->interface, ctrl->path, ret);
+        zlog_error_if(ctrl->interface, "failed to attach to wpa control event feed using control file %s (%d)", ctrl->path, ret);
         goto fail;
     }
 
     int ctrl_event_fd = wpa_ctrl_get_fd(ctrl_event);
     ret = event_loop_register_event(ctrl->loop, EPOLLIN, ctrl_event_fd, on_wpa_controller_event, ctrl);
     if (ret < 0) {
-        zlog_error("[%s] failed to register wpa control event monitor (%d)", ctrl->interface, ret);
+        zlog_error_if(ctrl->interface, "failed to register wpa control event monitor (%d)", ret);
         goto fail;
     }
 
@@ -417,7 +417,7 @@ wpa_controller_connection_establish(struct wpa_controller *ctrl)
     ctrl->event_fd = ctrl_event_fd;
     ctrl->connected = true;
 
-    zlog_info("[%s] control socket connection established", ctrl->interface);
+    zlog_info_if(ctrl->interface, "control socket connection established");
 
 out:
     return ret;
@@ -460,7 +460,7 @@ wpa_controller_connection_teardown(struct wpa_controller *ctrl)
 
     ctrl->connected = false;
 
-    zlog_info("[%s] control socket connection severed", ctrl->interface);
+    zlog_info_if(ctrl->interface, "control socket connection severed");
 }
 
 /**
