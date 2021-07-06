@@ -30,10 +30,11 @@ The daemon usage is driven primarily by configuration files whose path is passed
 to the daemon as a command line flag. The daemon accepts the following command
 line flags:
 
-| Flag | Presence     | Description                        | Supported Values                                | Examples                   |
-|------|--------------|------------------------------------|-------------------------------------------------|----------------------------|
-| `-c` | **Required** | Configuration file path            | Absolute path to the primary configuration file | `-c /etc/ztpd/config.json` |
-| `-d` | Optional     | Daemonize flag (run in background) | None (unary flag)                               | `-d`                       |
+| Flag | Presence     | Description                                     | Supported Values                                | Examples                   |
+|------|--------------|-------------------------------------------------|-------------------------------------------------|----------------------------|
+| `-c` | **Required** | Configuration file path                         | Absolute path to the primary configuration file | `-c /etc/ztpd/config.json` |
+| `-d` | Optional     | Daemonize flag (run in background)              | None (unary flag)                               | `-d`                       |
+| `-v` | Optional     | Version output flag. Program exits immediately. | None (unary flag)                               | `-v`                       |
 
 ### Configuration files
 

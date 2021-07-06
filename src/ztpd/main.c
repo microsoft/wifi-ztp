@@ -17,6 +17,7 @@
 #include "ztp_log.h"
 #include "ztp_settings.h"
 #include "ztp_wpa_supplicant.h"
+#include "ztp_version.h"
 #include "ztpd.h"
 
 /**
@@ -188,6 +189,16 @@ register_terminate_signals(struct event_loop *loop, int *pfd_signals)
 }
 
 /**
+ * @brief Output the current daemon version to standard output.
+ */
+static void
+show_version(void)
+{
+    zlog_info("ztpd v%u.%u.%u.%u", 
+        ZTP_VERSION_MAJOR, ZTP_VERSION_MINOR, ZTP_VERSION_PATCH, ZTP_VERSION_TWEAK);
+}
+
+/**
  * @brief Main program entrypoint.
  *
  * @param argc
@@ -208,9 +219,11 @@ main(int argc, char *argv[])
     struct ztp_wpa_supplicant wpas;
     struct ztp_dbus_network_configuration_manager *network_configuration_manager;
 
+    show_version();
+
     // Process command line options.
     for (;;) {
-        int opt = getopt(argc, argv, "bc:");
+        int opt = getopt(argc, argv, "bc:v");
         if (opt < 0) {
             break;
         }
@@ -222,6 +235,9 @@ main(int argc, char *argv[])
             case 'c':
                 config_file = triml(optarg);
                 break;
+            case 'v':
+                // when explicitly specified, exit immediately
+                return 0;
             default:
                 break;
         }

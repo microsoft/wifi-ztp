@@ -1,5 +1,7 @@
 
-project(ztpcore)
+project(ztpcore
+    VERSION 0.4.2.0
+)
 
 add_library(ztpcore
     STATIC
@@ -28,6 +30,15 @@ target_sources(ztpcore
         ztp.c
 )
 
+target_compile_definitions(ztpcore
+    PUBLIC
+        ZTPCORE_VERSION=${PROJECT_VERSION}
+        ZTPCORE_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+        ZTPCORE_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+        ZTPCORE_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+        ZTPCORE_VERSION_TWEAK=${PROJECT_VERSION_TWEAK}
+)
+
 target_include_directories(ztpcore
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -47,3 +58,4 @@ target_link_libraries(ztpcore
     ztpwpas
     ztpwifi
 )
+
