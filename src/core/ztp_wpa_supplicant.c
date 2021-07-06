@@ -224,7 +224,7 @@ wpas_interface_added(sd_bus_message *msg, void *userdata, sd_bus_error *ret_erro
 
     ret = wpas_interface_add(wpas, path, name);
     if (ret < 0) {
-        zlog_error("[%s] failed to add new interface (%d)", name, ret);
+        zlog_error_if(name, "failed to add new interface (%d)", ret);
         return ret;
     }
 
