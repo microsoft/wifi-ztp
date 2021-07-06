@@ -33,13 +33,16 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
+    - name: Install Dependencies
+      run: |
+        apt update
+        apt install build-essential cmake git libboost-filesystem-dev libboost-random-dev libboost-regex-dev libboost-system-dev libboost-thread-dev libbrotli-dev libgpiod-dev libjson-c-dev libssl-dev libsystemd-dev pkg-config zlib1g-dev
 
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 https://git.io/JvXDl
+    - name: Build
+      run: |
+        mkdir build && cd $_
+        cmake ..
+        make -j$(nproc)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
