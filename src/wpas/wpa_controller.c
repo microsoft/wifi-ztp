@@ -65,7 +65,7 @@ struct wpa_event_handler_instance {
 static_assert(MAC_SIZE == MAC_SIZE_C, "invalid mac size");
 
 /**
- * @brief Helpers for pasing a DPP bootstrap hash string as encoded in wpa
+ * @brief Helpers for parsing a DPP bootstrap hash string as encoded in wpa
  * control socket event messages.
  */
 #define DPP_HASH_FORMAT "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -98,7 +98,7 @@ wpa_controller_process_event_chirp_received(struct wpa_controller *ctrl, const c
 
     struct dpp_bootstrap_publickey_hash publickey_hash;
     if (hex_decode(hash, publickey_hash.data, sizeof publickey_hash.data) < 0) {
-        zlog_error_if(ctrl->interface, "ifailed to decode public key hash (invalid format)");
+        zlog_error_if(ctrl->interface, "failed to decode public key hash (invalid format)");
         return;
     }
 
