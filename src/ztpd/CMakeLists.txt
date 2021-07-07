@@ -35,6 +35,7 @@ target_link_libraries(ztpd
     ztpsystemd
     ztputils
     ${LIBGPIOD_TARGET}
+    ${LIBEVENT_TARGET}
 )
 
 add_subdirectory(systemd)

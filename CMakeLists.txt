@@ -36,6 +36,7 @@ include(cmake/find_wpa_client.cmake)
 include(cmake/find_systemd.cmake)
 include(cmake/find_gpiod.cmake)
 include(cmake/find_jsonc.cmake)
+include(cmake/find_libevent.cmake)
 include(cmake/security_hardening.cmake)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

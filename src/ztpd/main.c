@@ -11,6 +11,9 @@
 #include <userspace/linux/compiler.h>
 
 #include "event_loop.h"
+
+#include "event2/event.h"
+
 #include "ztp_dbus_client.h"
 #include "ztp_dbus_network_configuration.h"
 #include "ztp_dbus_server.h"
@@ -333,6 +336,8 @@ main(int argc, char *argv[])
     event_loop_uninitialize(&loop);
 
     close(signalfd);
+
+    libevent_global_shutdown();
 
     zlog_debug("exiting");
 
