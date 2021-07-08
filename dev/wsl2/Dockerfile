@@ -3,7 +3,7 @@ LABEL maintainer="Andrew Beltrano <anbeltra@microsoft.com>"
 
 RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list && \
     echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
-RUN apt update && apt-get build-dep linux && apt install git
+RUN apt update && apt-get -y build-dep linux && apt install -y git
 
 # Download wsl2 kernel source.
 RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git kernel
