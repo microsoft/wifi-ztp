@@ -1,13 +1,17 @@
 FROM ubuntu:focal
 LABEL maintainer="Andrew Beltrano <anbeltra@microsoft.com>"
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list && \
     echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
-RUN apt update && apt-get -y build-dep linux && apt install -y git
+RUN apt update 
+RUN apt-get -y build-dep linux 
+RUN apt install -y git
 
 # Download wsl2 kernel source.
-RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git kernel
-WORKDIR $(pwd)/kernel
+WORKDIR /usr/src/linux/
+RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git wsl2
+WORKDIR /usr/src/linux/wsl2
 
 # Copy kernel build config
 RUN cp Microsoft/config-wsl .config
@@ -19,13 +23,14 @@ RUN echo "CONFIG_WLAN=y" >> .config && \
   echo "CONFIG_MAC80211_HWSIM=m" >> .config
 
 # Silently add required defaults & prepare to compile mods
-RUN make olddefconfig && \
-  make modules_prepare
+RUN make olddefconfig
+RUN make modules_prepare
 
 # Compile the modules
-RUN make M=net/wireless/ && \
-  make M=net/mac80211/ && \
-  make M=drivers/net/wireless/
+RUN make M=net/wireless/
+RUN make M=net/mac80211/
+RUN make M=drivers/net/wireless/
+RUN make modules_install
 
 # Copy them to where we'll need them
 # RUN mkdir /kmod/ \
@@ -33,25 +38,20 @@ RUN make M=net/wireless/ && \
 #   /usr/src/linux/net/wireless/cfg80211.ko \
 #   /usr/src/linux/net/mac80211/mac80211.ko /kmod/
 
-# ENTRYPOINT []
-# CMD []
-# WORKDIR /
-# COPY --from=builder /kmod/* /kmod/
-# COPY probe.sh /probe.sh
-
-# RUN apt install \
-#     build-essential \
-#     cmake \
-#     git \
-#     libboost-filesystem-dev \
-#     libboost-random-dev \
-#     libboost-regex-dev \
-#     libboost-system-dev \
-#     libboost-thread-dev \
-#     libbrotli-dev \
-#     libgpiod-dev \
-#     libjson-c-dev \
-#     libssl-dev \
-#     libsystemd-dev \
-#     pkg-config \
-#     zlib1g-dev
+# Install ztp dev dependencies
+RUN apt install \
+    build-essential \
+    cmake \
+    git \
+    libboost-filesystem-dev \
+    libboost-random-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
+    libbrotli-dev \
+    libgpiod-dev \
+    libjson-c-dev \
+    libssl-dev \
+    libsystemd-dev \
+    pkg-config \
+    zlib1g-dev
