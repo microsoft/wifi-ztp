@@ -27,9 +27,9 @@ RUN make olddefconfig
 RUN make modules_prepare
 
 # Compile the modules
-RUN make M=net/wireless/
-RUN make M=net/mac80211/
-RUN make M=drivers/net/wireless/
+RUN make M=net/wireless
+RUN make M=net/mac80211
+RUN make M=drivers/net/wireless
 RUN make modules_install
 
 # Copy them to where we'll need them
