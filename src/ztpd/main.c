@@ -246,6 +246,8 @@ main(int argc, char *argv[])
         }
     }
 
+    struct event_base *ebase = event_base_new();
+
     ret = ztp_settings_parse(config_file, &settings);
     if (ret < 0) {
         zlog_panic("failed to parse settings from %s (%d)", config_file, ret);
@@ -321,6 +323,8 @@ main(int argc, char *argv[])
         }
     }
 
+    event_reinit(ebase);
+
     ret = ztpd_run(&ztpd);
     if (ret < 0) {
         zlog_panic("ztpd did not exit cleanly (%d)", ret);
@@ -337,6 +341,7 @@ main(int argc, char *argv[])
 
     close(signalfd);
 
+    event_base_free(ebase);
     libevent_global_shutdown();
 
     zlog_debug("exiting");
