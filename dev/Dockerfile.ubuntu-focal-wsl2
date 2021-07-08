@@ -38,7 +38,7 @@ RUN make M=drivers/net/wireless
 #   /usr/src/linux/net/mac80211/mac80211.ko /kmod/
 
 # Install ztp dev dependencies
-RUN apt install \
+RUN apt install -y \
     build-essential \
     cmake \
     git \
