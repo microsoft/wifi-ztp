@@ -6,7 +6,7 @@ RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sourc
     echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
 RUN apt update 
 RUN apt-get -y build-dep linux 
-RUN apt install -y git
+RUN apt install -y git wireless-tools vim
 
 # Download wsl2 kernel source.
 WORKDIR /usr/src/linux/
