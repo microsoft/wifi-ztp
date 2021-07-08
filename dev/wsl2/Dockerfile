@@ -1,9 +1,9 @@
 FROM ubuntu:focal
 LABEL maintainer="Andrew Beltrano <anbeltra@microsoft.com>"
 
-RUN sudo echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list && \
-    sudo echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
-RUN sudo apt update && sudo apt-get build-dep linux && sudo apt install git
+RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list && \
+    echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
+RUN apt update && apt-get build-dep linux && apt install git
 
 # Download wsl2 kernel source.
 RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git kernel
@@ -39,7 +39,7 @@ RUN make M=net/wireless/ && \
 # COPY --from=builder /kmod/* /kmod/
 # COPY probe.sh /probe.sh
 
-# RUN sudo apt install \
+# RUN apt install \
 #     build-essential \
 #     cmake \
 #     git \
