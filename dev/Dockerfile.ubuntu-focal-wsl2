@@ -1,17 +1,19 @@
-FROM ubuntu:focal
+# Stage: prep/build
+FROM ubuntu:focal AS build
 LABEL maintainer="Andrew Beltrano <anbeltra@microsoft.com>"
+
 ENV DEBIAN_FRONTEND=noninteractive
+ENV KSRC=/usr/src/linux/wsl2
 
-RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list && \
-    echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
-RUN apt update 
-RUN apt-get -y build-dep linux 
-RUN apt install -y git wireless-tools vim
+RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal main" >> /etc/apt/sources.list.d/kernel-src.list
+RUN echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main" >> /etc/apt/sources.list.d/kernel-src.list
+RUN apt update
+RUN apt-get -y build-dep linux
+RUN apt install -y git
 
-# Download wsl2 kernel source.
-WORKDIR /usr/src/linux/
-RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git wsl2
-WORKDIR /usr/src/linux/wsl2
+# Download wsl2 kernel source
+RUN git clone --depth 1 --branch linux-msft-wsl-$(uname -r | cut -d - -f 1) https://github.com/microsoft/WSL2-Linux-Kernel.git ${KSRC}
+WORKDIR ${KSRC}
 
 # Copy kernel build config
 RUN cp Microsoft/config-wsl .config
@@ -30,14 +32,21 @@ RUN make modules_prepare
 RUN make M=net/wireless
 RUN make M=net/mac80211
 RUN make M=drivers/net/wireless
+RUN mkdir /modules && cp \
+   ${KSRC}/drivers/net/wireless/mac80211_hwsim.ko \
+   ${KSRC}/net/wireless/cfg80211.ko \
+   ${KSRC}/net/mac80211/mac80211.ko /modules
 
-# Copy them to where we'll need them
-# RUN mkdir /kmod/ \
-#   && cp /usr/src/linux/drivers/net/wireless/mac80211_hwsim.ko \
-#   /usr/src/linux/net/wireless/cfg80211.ko \
-#   /usr/src/linux/net/mac80211/mac80211.ko /kmod/
+# Stage: development (final)
+FROM ubuntu:focal AS dev
+LABEL maintainer="Andrew Beltrano <anbeltra@microsoft.com>"
 
-# Install ztp dev dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN mkdir -p /lib/modules/wifi /src
+COPY --from=build /modules/*.ko /lib/modules/wifi/
+
+# Install dev build dependencies
+RUN apt update 
 RUN apt install -y \
     build-essential \
     cmake \
@@ -54,3 +63,22 @@ RUN apt install -y \
     libsystemd-dev \
     pkg-config \
     zlib1g-dev
+
+# Install dev tools
+RUN apt install -y \
+    kmod \
+    iproute2 \
+    net-tools \
+    wireless-tools \
+    vim \
+    openssh-server
+
+# Enable useful ssh stuff for development
+# RUN echo "   IdentityFile ~/.ssh/id_rsa" >> /etc/ssh/ssh_config && \
+#   echo "AllowAgentForwarding yes" > /etc/ssh/sshd_config.d/ztp.conf && \
+#   echo "AllowTcpForwarding yes" >> /etc/ssh/sshd_config.d/ztp.conf && \
+#   echo "PermitRootLogin prohibit-password" >> /etc/ssh/sshd_config.d/ztp.conf
+
+# Checkout code @ HEAD of main
+RUN git clone https://github.com/microsoft/wifi-ztp.git /src/wifi-ztp
+WORKDIR /src/wifi-ztp
