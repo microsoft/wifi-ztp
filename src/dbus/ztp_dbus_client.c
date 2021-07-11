@@ -160,10 +160,12 @@ ztp_dbus_unregister_properties_changed_handler(struct ztp_dbus_properties_change
  * @param fd The file descriptor that has an update.
  * @param context The global ztpd instance.
  */
-static void
-process_fd_update_dbus(int fd, void *context)
+int
+process_fd_update_dbus(sd_event_source *s,int fd, uint32_t revents, void *context)
 {
+    __unused(s);
     __unused(fd);
+    __unused(revents);
 
     uint32_t nmsg = 0;
     sd_bus_message *msg;
@@ -186,10 +188,10 @@ process_fd_update_dbus(int fd, void *context)
     }
 
     // Re-configure the file descriptor with updated operations.
-    int events = sd_bus_get_events(dbus->bus);
+    uint32_t events = sd_bus_get_events(dbus->bus);
     struct epoll_event event;
     explicit_bzero(&event, sizeof event);
-    event.events = (events > 0) ? (uint32_t)events : EPOLLIN;
+    event.events = events ? events : EPOLLIN;
     event.data.fd = dbus->fd;
 
     if (epoll_ctl(dbus->loop->epoll_fd, EPOLL_CTL_MOD, event.data.fd, &event) < 0)
@@ -204,11 +206,6 @@ process_fd_update_dbus(int fd, void *context)
 void
 ztp_dbus_uninitialize(struct ztp_dbus_client *dbus)
 {
-    if (dbus->fd != -1) {
-        event_loop_unregister_event(dbus->loop, dbus->fd);
-        dbus->fd = -1;
-    }
-
     if (dbus->bus != NULL) {
         sd_bus_unref(dbus->bus);
         dbus->bus = NULL;
@@ -223,7 +220,7 @@ ztp_dbus_uninitialize(struct ztp_dbus_client *dbus)
  * @return int 0 initialized successfuly, non-zero otherwise.
  */
 int
-ztp_dbus_initialize(struct ztp_dbus_client *dbus, struct event_loop *loop)
+ztp_dbus_initialize(struct ztp_dbus_client *dbus, sd_event *loop)
 {
     INIT_LIST_HEAD(&dbus->property_changed_handles);
     dbus->loop = loop;
@@ -236,22 +233,7 @@ ztp_dbus_initialize(struct ztp_dbus_client *dbus, struct event_loop *loop)
         goto fail;
     }
 
-    // Get the file descriptor for the system bus for use in epoll loop.
-    int fd = sd_bus_get_fd(dbus->bus);
-    if (fd < 0) {
-        ret = fd;
-        zlog_error("failed to retrieve sd bus file desriptor (%d)", -ret);
-        goto fail;
-    }
-
-    dbus->fd = fd;
-    int events = sd_bus_get_events(dbus->bus);
-    if (events < 0) {
-        zlog_error("failed to retrieve sd bus i/o event list (%d)", events);
-        goto fail;
-    }
-
-    ret = event_loop_register_event(loop, (uint32_t)events, fd, process_fd_update_dbus, dbus);
+    ret = sd_bus_attach_event(dbus->bus,loop,SD_EVENT_PRIORITY_NORMAL);
     if (ret < 0) {
         zlog_error("failed to register event for monitoring d-bus updates (%d)", ret);
         goto fail;
