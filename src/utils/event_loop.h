@@ -54,7 +54,7 @@ struct event_loop {
  * @return int 0 if the handler was successfully registered, non-zero otherwise.
  */
 int
-event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, sd_event_io_handler_t handler, void *handler_arg);
+event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, event_handler_fn handler, void *handler_arg);
 
 /**
  * @brief Unregisters an read event handler.
