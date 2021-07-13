@@ -101,16 +101,16 @@ event_loop_uninitialize(struct event_loop *loop)
 }
 
 // helper struct to implement the timer events
-struct timer_event_info {
+struct timer_event_helper_context {
     enum scheduled_task_type type;
     uint64_t usec_offset_from_now;
     scheduled_task_handler original_handler;
     void *original_context;
 };
 
-struct timer_event_info *create_helper_timer_info(enum scheduled_task_type type,uint64_t usec_offset,scheduled_task_handler handler,void*context)
+struct timer_event_helper_context *create_timer_event_helper_context(enum scheduled_task_type type,uint64_t usec_offset,scheduled_task_handler handler,void*context)
 {
-    struct timer_event_info *tmp;
+    struct timer_event_helper_context *tmp;
     tmp = calloc(1, sizeof *tmp);
     if (!tmp)
         return tmp;
@@ -125,7 +125,7 @@ struct timer_event_info *create_helper_timer_info(enum scheduled_task_type type,
 int helper_handler_for_timer_events(sd_event_source *s, uint64_t usec, void *context)
 {
     __unused(usec);
-    struct timer_event_info *tinfo = (struct timer_event_info *)context;
+    struct timer_event_helper_context *tinfo = (struct timer_event_helper_context *)context;
 
     tinfo->original_handler(tinfo->original_context);
 
@@ -163,7 +163,7 @@ event_loop_task_schedule(struct event_loop *loop, uint32_t seconds, uint32_t use
     // transform the seconds + useconds into a single useconds offset
     uint64_t usec_offset = 1'000'000 * ((uint64_t) seconds) + ((uint64_t) useconds);
 
-    struct timer_event_info *helper_context = create_helper_timer_info(type, usec_offset, handler, task_context);
+    struct timer_event_helper_context *helper_context = create_timer_event_helper_context(type, usec_offset, handler, task_context);
     if (!helper_context) {
         ret = -ENOMEM;
         goto fail;
@@ -240,16 +240,16 @@ event_loop_task_cancel(struct event_loop *loop, scheduled_task_handler handler, 
 #define EPOLL_TIMEOUT_INFINITE (-1)
 
 // helper struct to implement the io based events
-struct io_event_info {
+struct io_event_helper_context {
     int fd;
     uint32_t events;
     event_handler_fn original_handler;
     void *original_context;
 };
 
-struct io_event_info *create_helper_io_info(int fd, uint32_t events, event_handler_fn handler, void *context)
+struct io_event_helper_context *create_io_event_helper_context(int fd, uint32_t events, event_handler_fn handler, void *context)
 {
-    struct io_event_info *tmp;
+    struct io_event_helper_context *tmp;
     tmp = calloc(1, sizeof *tmp);
     if (!tmp)
         return tmp;
@@ -265,7 +265,7 @@ int helper_handler_for_io_events(sd_event_source *s, int fd, uint32_t revents, v
 {
     __unused(s);
     __unused(revents);
-    struct io_event_info *tinfo = (struct io_event_info *)context;
+    struct io_event_helper_context *tinfo = (struct io_event_helper_context *)context;
 
     tinfo->original_handler(fd, tinfo->original_context);
     return 0;
@@ -289,7 +289,7 @@ event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, even
     if (!item)
         return -ENOMEM;
 
-    struct timer_event_info *helper_context = create_helper_io_info(fd, events, handler, handler_arg);
+    struct io_event_helper_context *helper_context = create_io_event_helper_context(fd, events, handler, handler_arg);
     if (!helper_context) {
         ret = -ENOMEM;
         goto fail;
