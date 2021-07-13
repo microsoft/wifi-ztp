@@ -8,6 +8,8 @@
 
 #include <userspace/linux/list.h>
 
+#include <systemd/sd-event.h>
+
 struct scheduled_task;
 
 /**
@@ -36,15 +38,9 @@ struct event_dispatch {
  * @brief Event loop control structure.
  */
 struct event_loop {
-    struct list_head scheduled_tasks;
+    struct list_head sd_event_source_list;
+    sd_event *ebase;
     clockid_t clock;
-    int epoll_fd;
-    bool terminate_pending;
-
-    size_t events_max;
-    struct epoll_event *events;
-    struct event_dispatch dispatch;
-    int exit_code;
 };
 
 /**
@@ -58,7 +54,7 @@ struct event_loop {
  * @return int 0 if the handler was successfully registered, non-zero otherwise.
  */
 int
-event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, event_handler_fn handler, void *handler_arg);
+event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, sd_event_io_handler_t handler, void *handler_arg);
 
 /**
  * @brief Unregisters an read event handler.
@@ -87,17 +83,30 @@ struct scheduled_task_timeout {
     uint32_t useconds;
 };
 
+enum source_event_type_enum {UNKNOWN=0, TIMER, IO};
+
 /**
- * @brief Context for scheduled task.
+ * @brief 
  */
-struct scheduled_task {
+struct sd_event_source_list_item {
     struct list_head list;
-    struct timespec expiry;
-    struct event_loop *loop;
-    struct scheduled_task_timeout timeout;
-    enum scheduled_task_type type;
-    scheduled_task_handler handler;
-    void *context;
+    sd_event_source *source;
+    void *helper_context; // contains the helper context for use with sd-event. will need to be freed when this event source is disabled and deleted
+    void *context; // contains the original context, for use in looking up event sources
+
+    enum source_event_type_enum event_type;
+
+    union source_event_type_union {
+        struct timer_event_info {
+            enum scheduled_task_type timer_type;
+            uint64_t usec_offset;
+            scheduled_task_handler handler;
+        } timer;
+        struct io_event_info {
+            int fd;
+            event_handler_fn handler;
+        } io;
+    } data;
 };
 
 /**
