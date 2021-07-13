@@ -314,18 +314,19 @@ main(int argc, char *argv[])
     if (daemonize) {
         if (daemon(0, 0)) {
             zlog_panic("failed to daemonize");
-            return -1;
+            ret = -1;
+            goto cleanup;
         }
     }
 
     ret = ztpd_run(&ztpd);
     if (ret < 0) {
         zlog_panic("ztpd did not exit cleanly (%d)", ret);
-        return ret;
+    } else {
+        zlog_debug("event loop completed");
     }
 
-    zlog_debug("event loop completed");
-
+cleanup:
     ztpd_uninitialize(&ztpd);
     ztp_dbus_uninitialize(&dbus_client);
     ztp_dbus_server_uninitialize(&dbus_server);
@@ -335,6 +336,6 @@ main(int argc, char *argv[])
     close(signalfd);
 
     zlog_debug("exiting");
-
-    return 0;
+out:
+    return ret;
 }
