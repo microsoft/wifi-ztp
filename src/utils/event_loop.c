@@ -10,25 +10,6 @@
 #include "ztp_log.h"
 
 /**
- * @brief Converts a ztpd scheduled task type to a string.
- *
- * @param type The type of convert.
- * @return const char* A string representation of the task type.
- */
-static const char *
-scheduled_task_type_str(enum scheduled_task_type type)
-{
-    switch (type) {
-        case TASK_ONESHOT:
-            return "oneshot";
-        case TASK_PERIODIC:
-            return "periodic";
-        default:
-            return "??";
-    }
-}
-
-/**
  * @brief Allocates and initializes a new sd_event_source_list_item
  *
  * @return struct sd_event_source_list_item*
@@ -132,7 +113,9 @@ int helper_handler_for_timer_events(sd_event_source *s, uint64_t usec, void *con
     if (tinfo->type == TASK_PERIODIC) {
         // reschedule the event source
         sd_event_source_set_enabled(s, SD_EVENT_ON);
-        sd_event_source_set_time_relative(s,tinfo->usec_offset_from_now);
+        uint64_t now;
+        sd_event_source_get_time(s,&now);
+        sd_event_source_set_time(s,now + tinfo->usec_offset_from_now);
     }
     return 0;
 }
@@ -160,8 +143,18 @@ event_loop_task_schedule(struct event_loop *loop, uint32_t seconds, uint32_t use
     if (!task)
         return -ENOMEM;
 
+    struct timespec now;
+    ret = clock_gettime(loop->clock, &now);
+    if (ret < 0) {
+        ret = errno;
+        zlog_error("failed to retrieve current time (%d)", ret);
+        free(task);
+        return ret;
+    }
+
     // transform the seconds + useconds into a single useconds offset
-    uint64_t usec_offset = 1'000'000 * ((uint64_t) seconds) + ((uint64_t) useconds);
+    uint64_t usec_offset = 1000000 * ((uint64_t) seconds) + ((uint64_t) useconds);
+    uint64_t usec_fire_time = usec_offset + (((uint64_t)now.tv_nsec) / 1000) + (((uint64_t)now.tv_sec) * 1000000);
 
     struct timer_event_helper_context *helper_context = create_timer_event_helper_context(type, usec_offset, handler, task_context);
     if (!helper_context) {
@@ -169,10 +162,10 @@ event_loop_task_schedule(struct event_loop *loop, uint32_t seconds, uint32_t use
         goto fail;
     }
 
-    ret = sd_event_add_time_relative(loop->ebase, &task->source, loop->clock, usec_offset, 0, helper_handler_for_timer_events, helper_context);
+    ret = sd_event_add_time(loop->ebase, &task->source, loop->clock, usec_fire_time, 0, helper_handler_for_timer_events, helper_context);
     if (ret < 0) {
         ret = errno;
-        zlog_error("failed to schedule task %p (ret = %d)", handler, ret);
+        zlog_error("failed to schedule task (ret = %d)", ret);
         goto fail;
     }
 
@@ -295,7 +288,7 @@ event_loop_register_event(struct event_loop *loop, uint32_t events, int fd, even
         goto fail;
     }
 
-    int ret = sd_event_add_io(loop->ebase, &item->source, fd, events, helper_handler_for_io_events, helper_context);
+    ret = sd_event_add_io(loop->ebase, &item->source, fd, events, helper_handler_for_io_events, helper_context);
     if (ret < 0) {
         ret = errno;
         zlog_error("failed to register fd=%d for event monitoring (%d)", fd, ret);
