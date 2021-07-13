@@ -151,54 +151,6 @@ ztp_dbus_unregister_properties_changed_handler(struct ztp_dbus_properties_change
 }
 
 /**
- * @brief Processes an update for a file descriptor used for monitoring d-bus
- * socket changes.
- *
- * sd-bus may coalesce multiple ready messages into a single file descriptor
- * signal, so a loop is needed to ensure all such messages are processed.
- *
- * @param fd The file descriptor that has an update.
- * @param context The global ztpd instance.
- */
-int
-process_fd_update_dbus(sd_event_source *s,int fd, uint32_t revents, void *context)
-{
-    __unused(s);
-    __unused(fd);
-    __unused(revents);
-
-    uint32_t nmsg = 0;
-    sd_bus_message *msg;
-    struct ztp_dbus_client *dbus = (struct ztp_dbus_client *)context;
-
-    for (;;) {
-        // Retrieve the next message that is available for processing.
-        int ret = sd_bus_process(dbus->bus, &msg);
-        if (ret < 0) {
-            zlog_error("failed to retrieve pending sd-bus message (%d)", ret);
-            break;
-        // This indicates no more messages are available for processing.
-        } else if (ret == 0) {
-            break;
-        }
-
-        // Release message reference to indicate we're done with it.
-        sd_bus_message_unref(msg);
-        nmsg++;
-    }
-
-    // Re-configure the file descriptor with updated operations.
-    uint32_t events = sd_bus_get_events(dbus->bus);
-    struct epoll_event event;
-    explicit_bzero(&event, sizeof event);
-    event.events = events ? events : EPOLLIN;
-    event.data.fd = dbus->fd;
-
-    if (epoll_ctl(dbus->loop->epoll_fd, EPOLL_CTL_MOD, event.data.fd, &event) < 0)
-        zlog_error("failed to update sd-bus fd settings for epoll (%d)", errno);
-}
-
-/**
  * @brief Uninitializes a dbus connector instance.
  *
  * @param dbus The instance to uninitialize.
@@ -220,7 +172,7 @@ ztp_dbus_uninitialize(struct ztp_dbus_client *dbus)
  * @return int 0 initialized successfuly, non-zero otherwise.
  */
 int
-ztp_dbus_initialize(struct ztp_dbus_client *dbus, sd_event *loop)
+ztp_dbus_initialize(struct ztp_dbus_client *dbus, struct event_loop *loop)
 {
     INIT_LIST_HEAD(&dbus->property_changed_handles);
     dbus->loop = loop;
@@ -233,7 +185,7 @@ ztp_dbus_initialize(struct ztp_dbus_client *dbus, sd_event *loop)
         goto fail;
     }
 
-    ret = sd_bus_attach_event(dbus->bus,loop,SD_EVENT_PRIORITY_NORMAL);
+    ret = sd_bus_attach_event(dbus->bus, loop->ebase, SD_EVENT_PRIORITY_NORMAL);
     if (ret < 0) {
         zlog_error("failed to register event for monitoring d-bus updates (%d)", ret);
         goto fail;

@@ -123,6 +123,8 @@ on_settings_changed(struct ztp_settings *settings_old, struct ztp_settings_chang
 static void
 on_signal_received(int fd, void *context)
 {
+    struct event_loop *loop = (struct event_loop *)context;
+
     struct signalfd_siginfo siginfo;
     ssize_t bytes = read(fd, &siginfo, sizeof siginfo);
     if (bytes < (ssize_t)(sizeof siginfo)) {
@@ -133,7 +135,7 @@ on_signal_received(int fd, void *context)
     switch (siginfo.ssi_signo) {
         case SIGINT:
         case SIGTERM:
-            event_loop_stop((struct event_loop *)context, -((int) siginfo.ssi_signo));
+            sd_event_exit(loop->ebase,-((int) siginfo.ssi_signo));
             break;
         default:
             break;
