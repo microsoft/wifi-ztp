@@ -336,6 +336,5 @@ cleanup:
     close(signalfd);
 
     zlog_debug("exiting");
-out:
     return ret;
 }
