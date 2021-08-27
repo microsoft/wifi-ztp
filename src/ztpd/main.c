@@ -322,13 +322,13 @@ main(int argc, char *argv[])
     }
 
     ret = ztpd_run(&ztpd);
+    
+cleanup:
     if (ret < 0) {
         zlog_panic("ztpd did not exit cleanly (%d)", ret);
     } else {
         zlog_debug("event loop completed");
     }
-
-cleanup:
     ztpd_uninitialize(&ztpd);
     ztp_dbus_uninitialize(&dbus_client);
     ztp_dbus_server_uninitialize(&dbus_server);
